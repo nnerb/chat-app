@@ -1,6 +1,7 @@
 import express from "express"
 import authRoutes from "./routes/auth.route.js"
 import dotenv from "dotenv"
+import cookieParser from "cookie-parser"
 
 // Database connection function
 import { connectDB } from "./lib/db.js"
@@ -11,6 +12,7 @@ const app = express()
 const PORT = process.env.PORT || 5001
 
 app.use(express.json()) // allows to extract json data in the body
+app.use(cookieParser()) // allows you to parse the cookie so you can grab the value of it
 app.use("/api/auth", authRoutes)
 
 app.listen(PORT, () => {
