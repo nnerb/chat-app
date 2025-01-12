@@ -37,10 +37,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data })
-    } catch (error) {
-      console.log("Error in check auth", error)
-      set({ authUser: null })
-    } finally {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        console.warn("User is not logged in.");
+      } else {
+        console.error("Unexpected error during auth check:", error);
+      }
+      set({ authUser: null });
+    }finally {
       set({ isCheckingAuth: false })
     }
   },
