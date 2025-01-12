@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
-import { FormDataProps } from "../types";
+import { FormDataProps, LoginDataProps } from "../types";
 import toast from "react-hot-toast";
 import axios from "axios";
 
@@ -22,6 +22,7 @@ interface AuthState {
   checkAuth: () => Promise<void>;
   signup: (data: FormDataProps) => Promise<void>;
   logout: () => Promise<void>
+  login: (data: LoginDataProps) => Promise<void>
 }
 
 
@@ -76,5 +77,24 @@ export const useAuthStore = create<AuthState>((set) => ({
         toast.error('An unexpected error occurred');
       }
     }
-  }
+  },
+  login: async (data) => {
+    set({ isLoggingIn: true });
+    try {
+      const res = await axiosInstance.post("/auth/login", data);
+      set({ authUser: res.data });
+      toast.success("Logged in successfully");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        // Narrowing the type of error to AxiosError
+        const errorMessage = error.response?.data?.message || 'An error occurred during signup';
+        toast.error(errorMessage);
+      } else {
+        // Handle non-Axios errors
+        toast.error('An unexpected error occurred');
+      }
+    } finally {
+      set({ isLoggingIn: false });
+    }
+  },
 }))

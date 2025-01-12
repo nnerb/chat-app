@@ -5,7 +5,7 @@ interface AuthImagePatternProps {
 
 const AuthImagePattern: React.FC<AuthImagePatternProps> = ({ title, subtitle }) => {
   return (
-    <div className="hidden lg:flex items-center justify-center bg-base-200 p-12">
+    <div className="hidden lg:flex items-center justify-center bg-base-200 py-32">
       <div className="max-w-xs text-center">
         {/* Enhanced grid pattern */}
         <div className="grid grid-cols-3 gap-3 mb-8">

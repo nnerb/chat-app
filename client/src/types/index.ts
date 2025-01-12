@@ -3,3 +3,8 @@ export interface FormDataProps {
   email: string;
   password: string;
 }
+
+export interface LoginDataProps {
+  email: string;
+  password: string;
+}
