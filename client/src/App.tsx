@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Navbar from "./components/navbar";
 import HomePage from "./pages/home";
 import SignUpPage from "./pages/sign-up";
@@ -29,11 +29,11 @@ const App = () => {
     <div>
       <Navbar />
       <Routes>
-        <Route path="/" element={<HomePage />}/>
-        <Route path="/signup" element={<SignUpPage />}/>
+        <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login"/>} />
+        <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/"/>}/>
         <Route path="/login" element={<LoginPage />}/>
         <Route path="/profile" element={<ProfilePage />}/>
-        <Route path="/settings" element={<SettingsPage />}/>
+        <Route path="/settings" element={authUser ? <SettingsPage /> : <Navigate to="/login"/>}/>
       </Routes>
     </div>
    );
