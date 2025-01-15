@@ -65,8 +65,9 @@ const ProfilePage = () => {
             </div>
             {authUser?.profilePic && ( 
               <button 
-               className="btn btn-warning btn-sm"
+               className="btn btn-warning btn-sm disabled:btn-disabled"
                onClick={()=> (document.getElementById('my_modal_3') as HTMLDialogElement).showModal()}
+               disabled={isUpdatingProfile}
              >
                Remove Photo
              </button>

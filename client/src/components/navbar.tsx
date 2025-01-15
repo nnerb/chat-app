@@ -3,7 +3,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { LogOut, MessageSquare, Settings, User } from "lucide-react";
 
 const Navbar = () => {
-  const { logout, authUser } = useAuthStore();
+  const { logout, authUser, isUpdatingProfile } = useAuthStore();
 
   return (
     <header
@@ -26,7 +26,7 @@ const Navbar = () => {
               to={"/settings"}
               className={`
               btn btn-sm gap-2 transition-colors
-              
+              ${isUpdatingProfile && "pointer-events-none btn-disabled"}
               `}
             >
               <Settings className="w-4 h-4" />
@@ -35,12 +35,18 @@ const Navbar = () => {
 
             {authUser && (
               <>
-                <Link to={"/profile"} className={`btn btn-sm gap-2`}>
+                <Link 
+                  to={"/profile"} 
+                  className={`
+                    btn btn-sm gap-2
+                    ${isUpdatingProfile && "pointer-events-none btn-disabled"} 
+                  `}
+                >
                   <User className="size-5" />
                   <span className="hidden sm:inline">Profile</span>
                 </Link>
 
-                <button className="flex gap-2 items-center" onClick={logout}>
+                <button className="flex gap-2 items-center disabled:btn-disabled" onClick={logout} disabled={isUpdatingProfile}>
                   <LogOut className="size-5" />
                   <span className="hidden sm:inline">Logout</span>
                 </button>
