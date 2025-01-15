@@ -107,7 +107,7 @@ export const updateProfile = async(req, res) => {
     }
 
    const uploadResponse = await cloudinary.uploader.upload(profilePic)
-   const updatedUser = User.findByIdAndUpdate(
+   const updatedUser = await User.findByIdAndUpdate(
     userId, 
     { profilePic: uploadResponse.secure_url},
     { new: true }
@@ -120,6 +120,38 @@ export const updateProfile = async(req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" })
   }
 }
+
+export const removeProfilePic = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Fetch the user to get the current profile picture URL
+    const user = await User.findById(userId);
+
+    if (!user || !user.profilePic) {
+      return res.status(404).json({ success: false, message: "Profile picture not found" });
+    }
+
+    // Extract the public ID from the Cloudinary URL if you plan to delete it
+    const publicId = user.profilePic.split("/").pop().split(".")[0];
+
+    // Optionally delete the image from Cloudinary
+    await cloudinary.uploader.destroy(publicId);
+
+    // Update the user's profile to remove the profile picture
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePic: '' },
+      { new: true }
+    );
+
+    return res.status(200).json({ success: true, user: updatedUser });
+    
+  } catch (error) {
+    console.error("Error in remove profile picture controller", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
 export const checkAuth = (req, res) => {
   try {

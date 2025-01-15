@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
-import { FormDataProps, LoginDataProps } from "../types";
+import { FormDataProps, LoginDataProps, UpdateProfileProps } from "../types";
 import toast from "react-hot-toast";
 import axios from "axios";
 
@@ -22,7 +22,9 @@ interface AuthState {
   checkAuth: () => Promise<void>;
   signup: (data: FormDataProps) => Promise<void>;
   logout: () => Promise<void>
-  login: (data: LoginDataProps) => Promise<void>
+  login: (data: LoginDataProps) => Promise<void>;
+  updateProfile: (data: UpdateProfileProps ) => Promise<void>
+  removeProfile: () => Promise<void>
 }
 
 
@@ -31,7 +33,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   isSigningUp: false,
   isLoggingIn: false,
   isUpdatingProfile: false,
-
   isCheckingAuth: true,
   checkAuth: async () => {
     try {
@@ -44,7 +45,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         console.error("Unexpected error during auth check:", error);
       }
       set({ authUser: null });
-    }finally {
+    } finally {
       set({ isCheckingAuth: false })
     }
   },
@@ -99,6 +100,44 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
     } finally {
       set({ isLoggingIn: false });
+    }
+  },
+  updateProfile: async (data) => {
+    set({ isUpdatingProfile: true });
+    try {
+      const res = await axiosInstance.put("/auth/update-profile", data);
+      set({ authUser: res.data.user });
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        // Narrowing the type of error to AxiosError
+        const errorMessage = error.response?.data?.message || 'An error occurred during updating profile';
+        toast.error(errorMessage);
+      } else {
+        // Handle non-Axios errors
+        toast.error('An unexpected error occurred');
+      }
+    } finally {
+      set({ isUpdatingProfile: false });
+    }
+  },
+  removeProfile: async () => {
+    set({ isUpdatingProfile: true });
+    try {
+      const res = await axiosInstance.put("/auth/remove-profile");
+      set({ authUser: res.data.user });
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        // Narrowing the type of error to AxiosError
+        const errorMessage = error.response?.data?.message || 'An error occurred during updating profile';
+        toast.error(errorMessage);
+      } else {
+        // Handle non-Axios errors
+        toast.error('An unexpected error occurred');
+      }
+    } finally {
+      set({ isUpdatingProfile: false });
     }
   },
 }))

@@ -14,7 +14,9 @@ const app = express()
 const PORT = process.env.PORT || 5001
 
 
-app.use(express.json()) // allows to extract json data in the body
+app.use(express.json({
+  limit: '50mb'
+})) // allows to extract json data in the body
 app.use(cookieParser()) // allows you to parse the cookie so you can grab the value of it
 app.use(cors({
   origin: "http://localhost:5173",
@@ -23,7 +25,6 @@ app.use(cors({
 
 app.use("/api/auth", authRoutes)
 app.use("/api/message", messageRoutes)
-
 
 app.listen(PORT, () => {
   console.log("Server is running on PORT: ", PORT)
