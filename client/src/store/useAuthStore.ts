@@ -4,7 +4,7 @@ import { FormDataProps, LoginDataProps, UpdateProfileProps } from "../types";
 import toast from "react-hot-toast";
 import axios from "axios";
 
-interface AuthUser {
+export interface AuthUser {
   _id: string;
   fullName: string;
   username: string;
