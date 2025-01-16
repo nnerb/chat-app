@@ -3,19 +3,30 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { AuthUser } from "./useAuthStore";
+import { MessageDataProps } from "../types";
+
+
+interface MessagesProps {
+ _id: string;
+ senderId: string;
+ createdAt: string;
+ image: string;
+ text: string; 
+}
 
 interface UseMessageStoreProps {
-  messages: string[];
+  messages: MessagesProps[];
   users: AuthUser[];
   selectedUser: AuthUser | null,
   isUsersLoading: boolean,
   isMessagesLoading: boolean,
   getUsers: () => Promise<void>;
   getMessages: (userId: string) => Promise<void>;
-  setSelectedUser: (selectedUser: AuthUser) => void;
+  setSelectedUser: (selectedUser: AuthUser | null) => void;
+  sendMessage: (messageData: MessageDataProps) => Promise<void>;
 }
 
-export const useMessageStore = create<UseMessageStoreProps>((set) => ({
+export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   messages: [],
   users: [],
   selectedUser: null,
@@ -55,6 +66,22 @@ export const useMessageStore = create<UseMessageStoreProps>((set) => ({
       }
     } finally {
       set({ isMessagesLoading: false });
+    }
+  },
+  sendMessage: async (messageData) => {
+    const { selectedUser, messages } = get();
+    try {
+      const res = await axiosInstance.post(`/messages/send/${selectedUser?._id}`, messageData);
+      set({ messages: [...messages, res.data] });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        // Narrowing the type of error to AxiosError
+        const errorMessage = error.response?.data?.message || 'An error occurred while sending the message';
+        toast.error(errorMessage);
+      } else {
+        // Handle non-Axios errors
+        toast.error('An unexpected error occurred');
+      }
     }
   },
   setSelectedUser: (selectedUser) => set({ selectedUser }),

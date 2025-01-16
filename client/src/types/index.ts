@@ -12,3 +12,8 @@ export interface LoginDataProps {
 export interface UpdateProfileProps {
   profilePic: string
 }
+
+export interface MessageDataProps {
+  text: string;
+  image: string;
+}

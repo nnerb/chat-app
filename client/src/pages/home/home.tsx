@@ -1,7 +1,8 @@
 
-import Sidebar from "../components/sidebar";
-import NoChatSelected from "../components/no-chat-selected";
-import { useMessageStore } from "../store/useMessageStore";
+import Sidebar from "../../components/sidebar";
+import NoChatSelected from "../../components/no-chat-selected";
+import { useMessageStore } from "../../store/useMessageStore";
+import ChatContainer from "./components/chat-container";
 
 const HomePage = () => {
   const { selectedUser } = useMessageStore();
@@ -12,8 +13,7 @@ const HomePage = () => {
         <div className="bg-base-100 rounded-lg shadow-cl w-full max-w-6xl h-[calc(100vh-8rem)]">
           <div className="flex h-full rounded-lg overflow-hidden">
             <Sidebar />
-
-            {!selectedUser ? <NoChatSelected /> : ""}
+            {!selectedUser ? <NoChatSelected /> : <ChatContainer/>}
           </div>
         </div>
       </div>
