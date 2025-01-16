@@ -33,18 +33,18 @@ const Modal: React.FC<ModalProps> = ({
             ✕
           </button>
         </form>
-        <h3 className="font-bold text-lg">Are you sure you want to remove your profile?</h3>
+        <h3 className="font-bold text-lg">Are you sure you want to remove your photo?</h3>
         <p className="py-4">This action cannot be undone.</p>
         <form method="dialog" className="flex w-full gap-1 justify-end">
           <button 
             className="btn btn-sm btn-error disabled:btn-disabled" 
-            disabled={isUpdatingProfile}>No</button>
+            disabled={isUpdatingProfile}>No, Keep</button>
           <button 
             disabled={isUpdatingProfile}  
             type="submit" 
             className="btn btn-sm btn-primary disabled:btn-disabled" 
             onClick={handleImageRemove}>
-            Yes
+            Yes, Remove
           </button>
         </form>
       </div>
