@@ -1,4 +1,5 @@
 import cloudinary from "../lib/cloudinary.js"
+import Conversation from "../models/converstion.model.js"
 import Message from "../models/message.model.js"
 import User from "../models/user.model.js"
 
@@ -13,25 +14,35 @@ export const getUsersForSidebar = async(req, res) => {
   }
 }
 
-export const getMessages = async(req,res) => {
+export const getMessages = async (req, res) => {
   try {
-    const { id: chatPartnerId } = req.params
-    const currentUserId = req.user._id
+    const { id: chatPartnerId } = req.params; // ID of the user you're chatting with
+    const currentUserId = req.user._id; // Logged-in user's ID
 
-    const messages = await Message.find({
-      $or: [
-        { senderId: currentUserId, receiverId: chatPartnerId },
-        { senderId: chatPartnerId, receiverId: currentUserId }
-      ]
-    })
+    // Find or create the conversation
+    let conversation = await Conversation.findOne({
+      participants: { $all: [currentUserId, chatPartnerId] },
+    });
 
-    return res.status(200).json(messages)
+    // If no conversation exists, create a new one
+    if (!conversation) {
+      conversation = new Conversation({
+        participants: [currentUserId, chatPartnerId],
+      });
+      await conversation.save();
+    }
 
+    // Now fetch messages for this conversation
+    const messages = await Message.find({ conversationId: conversation._id })
+      .populate("senderId", "fullName profilePic") // Populate sender details
+      .sort({ createdAt: 1 }); // Sort by creation date (oldest first)
+
+    return res.status(200).json(messages); // Return messages in the conversation
   } catch (error) {
-    console.log("Error in getMessages controller", error)
-    res.status(500).json({ success: false, message: "Internal server error" })
+    console.log("Error in getMessages controller", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
-}
+};
 
 export const sendMessage = async(req, res) => {
   try {
@@ -61,3 +72,28 @@ export const sendMessage = async(req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" })
   }
 }
+
+export const getOrCreateConversation = async (req, res) => {
+  try {
+    const { userId: partnerId } = req.params; // The ID of the clicked user
+    const currentUserId = req.user._id; // The logged-in user's ID
+
+    // Check if a conversation already exists
+    let conversation = await Conversation.findOne({
+      participants: { $all: [currentUserId, partnerId] },
+    });
+
+    if (!conversation) {
+      // Create a new conversation
+      conversation = new Conversation({
+        participants: [currentUserId, partnerId],
+      });
+      await conversation.save();
+    }
+
+    res.status(200).json(conversation); // Return the conversation
+  } catch (error) {
+    console.log("Error in getOrCreateConversation controller", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};

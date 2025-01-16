@@ -36,9 +36,10 @@ const App = () => {
     <div data-theme={theme} className="w-full min-h-screen">
       <Navbar />
       <Routes>
-        <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login"/>} />
-        <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/"/>}/>
-        <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/"/>}/>
+        <Route path="/messages" element={authUser ? <HomePage /> : <Navigate to="/login"/>}/>
+        <Route path="messages/:id" element={<p className="mt-28">Hello world</p>}/>
+        <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/messages"/>}/>
+        <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/messages"/>}/>
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login"/>}/>
         <Route path="/settings" element={<SettingsPage/>}/>
       </Routes>
