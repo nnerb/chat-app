@@ -4,7 +4,7 @@ import HomePage from "./pages/home";
 import SignUpPage from "./pages/sign-up";
 import LoginPage from "./pages/login";
 import ProfilePage from "./pages/profile";
-import SettingsPage from "./pages/settings";
+import SettingsPage from "./pages/settings/settings";
 import { useAuthStore } from "./store/useAuthStore";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
