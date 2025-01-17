@@ -3,12 +3,23 @@ import { useEffect, useState } from "react";
 import { Users } from "lucide-react";
 import SidebarSkeleton from "./skeletons/sidebar-skeleton";
 import { useMessageStore } from "../store/useMessageStore";
-
+import { AuthUser } from "../store/useAuthStore";
+import { useNavigate, useParams } from "react-router-dom";
 const Sidebar = () => {
-  const { getUsers, selectedUser, users, setSelectedUser, isUsersLoading } = useMessageStore();
+
+  const { 
+    getUsers, 
+    selectedUser, 
+    users, 
+    setSelectedUser, 
+    isUsersLoading, 
+    // getMessages,
+  } = useMessageStore();
 
   const onlineUsers: string[] = []
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+  const navigate = useNavigate()
+  const { conversationId } = useParams()
 
   useEffect(() => {
     getUsers();
@@ -17,6 +28,10 @@ const Sidebar = () => {
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
     : users;
+
+  const handleSelectUser = async(user: AuthUser) => {
+    await setSelectedUser(user, navigate)
+  }
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -46,11 +61,11 @@ const Sidebar = () => {
         {filteredUsers.map((user) => (
           <button
             key={user._id}
-            onClick={() => setSelectedUser(user)}
+            onClick={() => handleSelectUser(user)}
             className={`
               w-full p-3 flex items-center gap-3
               hover:bg-base-300 transition-colors
-              ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
+              ${selectedUser?._id === user._id && conversationId ? "bg-base-300 ring-1 ring-base-300" : ""}
             `}
           >
             <div className="relative mx-auto lg:mx-0">

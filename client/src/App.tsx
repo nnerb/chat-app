@@ -20,8 +20,6 @@ const App = () => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [checkAuth, theme])
 
-  console.log(authUser)
-
   if (isCheckingAuth && !authUser) {
     return (
       <div className="flex items-center justify-center h-screen" data-theme={theme}>
@@ -30,18 +28,34 @@ const App = () => {
     )
   }
 
-  
-
   return ( 
     <div data-theme={theme} className="w-full min-h-screen">
       <Navbar />
       <Routes>
-        <Route path="/messages" element={authUser ? <HomePage /> : <Navigate to="/login"/>}/>
-        <Route path="messages/:id" element={<p className="mt-28">Hello world</p>}/>
-        <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/messages"/>}/>
-        <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/messages"/>}/>
-        <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login"/>}/>
-        <Route path="/settings" element={<SettingsPage/>}/>
+        <Route 
+          path="/messages" 
+          element={authUser ? <HomePage /> : <Navigate to="/login"/>}
+        />
+        <Route 
+          path="/messages/:conversationId" 
+          element={authUser ? <HomePage /> : <Navigate to="/login"/>}
+        />
+        <Route 
+          path="/signup" 
+          element={!authUser ? <SignUpPage /> : <Navigate to="/messages"/>}
+        />
+        <Route 
+          path="/login" 
+          element={!authUser ? <LoginPage /> : <Navigate to="/messages"/>}
+        />
+        <Route 
+          path="/profile" 
+          element={authUser ? <ProfilePage /> : <Navigate to="/login"/>}
+        />
+        <Route 
+          path="/settings" 
+          element={<SettingsPage/>}
+        />
       </Routes>
     </div>
    );

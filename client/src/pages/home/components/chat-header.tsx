@@ -1,8 +1,9 @@
 import { X } from "lucide-react";
 import { useMessageStore } from "../../../store/useMessageStore";
+import { Link } from "react-router-dom";
 
 const ChatHeader = () => {
-  const { selectedUser, setSelectedUser } = useMessageStore();
+  const { selectedUser } = useMessageStore();
   const onlineUsers: string[] = [];
 
   return (
@@ -26,9 +27,9 @@ const ChatHeader = () => {
         </div>
 
         {/* Close button */}
-        <button onClick={() => setSelectedUser(null)}>
+        <Link to="/messages">
           <X />
-        </button>
+        </Link>
       </div>
     </div>
   );
