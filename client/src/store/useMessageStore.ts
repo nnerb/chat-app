@@ -29,10 +29,10 @@ interface UseMessageStoreProps {
   isConversationLoading: boolean,
   isMessagesLoading: boolean,
   conversation: ConversationProps | null;
+  validConversationId: boolean | null
   getUsers: () => Promise<void>;
-  getMessages: (userId: string) => Promise<void>;
+  getMessages: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
   getConversation: (conversationId: string) => Promise<void>
-  setSelectedUser: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
   sendMessage: (messageData: MessageDataProps) => Promise<void>;
 }
 
@@ -44,6 +44,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   conversation: null,
+  validConversationId: null,
   getUsers: async () => {
     set({ isUsersLoading: true });
     try {
@@ -62,29 +63,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       set({ isUsersLoading: false });
     }
   },
-  getMessages: async (conversationId: string ) => {
-    set({ isMessagesLoading: true });
-    try {
-      const res = await axiosInstance.get(`/conversation/${conversationId}`);
-      set({ 
-        messages: res.data.messages, 
-        selectedUser: res.data.selectedUser, 
-        conversation: res.data.conversation 
-      });
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        // Narrowing the type of error to AxiosError
-        const errorMessage = error.response?.data?.message || 'An error occurred while fetching messages';
-        toast.error(errorMessage);
-      } else {
-        // Handle non-Axios errors
-        toast.error('An unexpected error occurred');
-      }
-    } finally {
-      set({ isMessagesLoading: false });
-    }
-  },
-  setSelectedUser: async(selectedUser, navigate) => {
+  getMessages: async (selectedUser, navigate) => {
     set({ isMessagesLoading: true });
     try {
       // Fetch or create conversation with the selected user
@@ -112,15 +91,22 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     set({ isConversationLoading: true });
     try {
       const res = await axiosInstance.get(`/conversation/${conversationId}`);
-      set({ conversation: res.data });
+      set({ 
+        messages: res.data.messages, 
+        selectedUser: res.data.selectedUser, 
+        conversation: res.data.conversation,
+        validConversationId: true
+      });
     } catch (error) {
       if (axios.isAxiosError(error)) {
         // Narrowing the type of error to AxiosError
-        const errorMessage = error.response?.data?.message || 'An error occurred while fetching conversation';
-        toast.error(errorMessage);
+        const errorMessage = error.response?.data?.message || 'An error occurred while fetching messages';
+        console.error(errorMessage);
+        set({ validConversationId: false })
       } else {
         // Handle non-Axios errors
         toast.error('An unexpected error occurred');
+        set({ validConversationId: false })
       }
     } finally {
       set({ isConversationLoading: false });

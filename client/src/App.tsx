@@ -7,8 +7,8 @@ import ProfilePage from "./pages/profile";
 import SettingsPage from "./pages/settings/settings";
 import { useAuthStore } from "./store/useAuthStore";
 import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
 import { useThemeStore } from "./store/useThemeStore";
+import Loading from "./components/skeletons/loading";
 
 const App = () => {
 
@@ -20,13 +20,7 @@ const App = () => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [checkAuth, theme])
 
-  if (isCheckingAuth && !authUser) {
-    return (
-      <div className="flex items-center justify-center h-screen" data-theme={theme}>
-        <Loader2 className="size-10 animate-spin"/>
-      </div>
-    )
-  }
+  if (isCheckingAuth && !authUser) return <Loading />
 
   return ( 
     <div data-theme={theme} className="w-full min-h-screen">
@@ -55,6 +49,10 @@ const App = () => {
         <Route 
           path="/settings" 
           element={<SettingsPage/>}
+        />
+        <Route 
+          path="*" 
+          element={<Navigate to="/messages" />}
         />
       </Routes>
     </div>

@@ -34,7 +34,6 @@ export const getMessages = async (req, res) => {
       (user) => user._id.toString() !== currentUserId.toString()
     );
 
-    // Now fetch messages for this conversation
     const messages = await Message.find({ conversationId: conversation._id })
       .populate("senderId", "fullName profilePic")
       .sort({ createdAt: 1 })
@@ -46,35 +45,6 @@ export const getMessages = async (req, res) => {
   }
 };
 
-export const selectUserToChat = async (req, res) => {
-  try {
-    const { id: chatPartnerId } = req.params; // ID of the user you're chatting with
-    const currentUserId = req.user._id; // Logged-in user's ID
-
-    // Find or create the conversation
-    let conversation = await Conversation.findOne({
-      participants: { $all: [currentUserId, chatPartnerId] },
-    });
-
-    // If no conversation exists, create a new one
-    if (!conversation) {
-      conversation = new Conversation({
-        participants: [currentUserId, chatPartnerId],
-      });
-      await conversation.save();
-    }
-
-    // Now fetch messages for this conversation
-    const messages = await Message.find({ conversationId: conversation._id })
-      .populate("senderId", "fullName profilePic") // Populate sender details
-      .sort({ createdAt: 1 }); // Sort by creation date (oldest first)
-
-    return res.status(200).json({ messages, conversationId: conversation._id }); // Return messages in the conversation
-  } catch (error) {
-    console.log("Error in selectUserToChat controller", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
-}
 export const sendMessage = async(req, res) => {
   try {
     const { text, image } = req.body

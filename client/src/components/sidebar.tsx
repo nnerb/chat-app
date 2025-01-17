@@ -11,7 +11,7 @@ const Sidebar = () => {
     getUsers, 
     selectedUser, 
     users, 
-    setSelectedUser, 
+    getMessages, 
     isUsersLoading, 
     // getMessages,
   } = useMessageStore();
@@ -22,7 +22,10 @@ const Sidebar = () => {
   const { conversationId } = useParams()
 
   useEffect(() => {
-    getUsers();
+    const fetchUsers = async() => {
+      await getUsers()
+    }
+    fetchUsers()
   }, [getUsers]);
 
   const filteredUsers = showOnlineOnly
@@ -30,7 +33,7 @@ const Sidebar = () => {
     : users;
 
   const handleSelectUser = async(user: AuthUser) => {
-    await setSelectedUser(user, navigate)
+    await getMessages(user, navigate)
   }
 
   if (isUsersLoading) return <SidebarSkeleton />;

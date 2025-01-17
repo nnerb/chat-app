@@ -12,34 +12,31 @@ import { useParams } from "react-router-dom";
 const ChatContainer = () => {
   const {
     messages,
-    isMessagesLoading,
+    isConversationLoading,
     selectedUser,
-    getMessages
+    getConversation
   } = useMessageStore()
   const { authUser } = useAuthStore();
   const messageEndRef = useRef<HTMLDivElement>(null)
   const { conversationId } = useParams()
-
-  console.log(conversationId)
-
   useEffect(() => {
     const fetchConversation = async() => {
       if (conversationId) {
-        await getMessages(conversationId)
+        await getConversation(conversationId)
       } 
     }
     fetchConversation()
-  },[conversationId, getMessages])
+  },[conversationId, getConversation])
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+      messageEndRef.current.scrollIntoView();
     }
   }, [messages]);
 
-  if (isMessagesLoading) {
+  if (isConversationLoading) {
     return (
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1 flex flex-col">
         <ChatHeader />
         <MessageSkeleton />
         <MessageInput />
