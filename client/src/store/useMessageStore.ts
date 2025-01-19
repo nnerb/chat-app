@@ -24,15 +24,16 @@ interface ConversationProps {
 interface UseMessageStoreProps {
   messages: MessagesProps[];
   users: AuthUser[];
-  selectedUser: AuthUser | null,
-  isUsersLoading: boolean,
-  isConversationLoading: boolean,
-  isMessagesLoading: boolean,
+  selectedUser: AuthUser | null;
+  isUsersLoading: boolean;
+  isConversationLoading: boolean;
+  isMessagesLoading: boolean;
   conversation: ConversationProps | null;
-  validConversationId: boolean | null
+  validConversationId: boolean | null;
+  conversationIds: string[] | null;
   getUsers: () => Promise<void>;
   getMessages: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
-  getConversation: (conversationId: string) => Promise<void>
+  getConversation: (conversationId: string) => Promise<void>;
   sendMessage: (messageData: MessageDataProps) => Promise<void>;
 }
 
@@ -45,6 +46,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   isMessagesLoading: false,
   conversation: null,
   validConversationId: null,
+  conversationIds: null,
   getUsers: async () => {
     set({ isUsersLoading: true });
     try {
@@ -71,7 +73,12 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       const conversationId = res.data.conversationId;
   
       if (conversationId) {
-        set({ messages: res.data.messages })
+        set({ 
+          messages: res.data.messages,
+          conversation: res.data.conversation,
+          selectedUser: res.data.selectedUser,  
+          validConversationId: true,
+        })
         navigate(`/messages/${conversationId}`);
       } else {
         throw new Error("Failed to retrieve conversation.");

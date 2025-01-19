@@ -14,19 +14,21 @@ const ChatContainer = () => {
     messages,
     isConversationLoading,
     selectedUser,
-    getConversation
+    getConversation,
+    validConversationId,
+    isMessagesLoading
   } = useMessageStore()
   const { authUser } = useAuthStore();
   const messageEndRef = useRef<HTMLDivElement>(null)
   const { conversationId } = useParams()
   useEffect(() => {
     const fetchConversation = async() => {
-      if (conversationId) {
+      if (conversationId && !validConversationId) {
         await getConversation(conversationId)
       } 
     }
     fetchConversation()
-  },[conversationId, getConversation])
+  },[conversationId, getConversation, validConversationId])
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -34,7 +36,7 @@ const ChatContainer = () => {
     }
   }, [messages]);
 
-  if (isConversationLoading) {
+  if (isConversationLoading || isMessagesLoading) {
     return (
       <div className="flex-1 flex flex-col">
         <ChatHeader />

@@ -13,7 +13,7 @@ const Sidebar = () => {
     users, 
     getMessages, 
     isUsersLoading, 
-    // getMessages,
+    
   } = useMessageStore();
 
   const onlineUsers: string[] = []

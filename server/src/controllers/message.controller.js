@@ -21,14 +21,16 @@ export const getMessages = async (req, res) => {
 
     let conversation = await Conversation.findOne({
       participants: { $all: [currentUserId, chatPartnerId] },
-    });
-
+    })
+    
     if (!conversation) {
       conversation = new Conversation({
         participants: [currentUserId, chatPartnerId],
       });
       await conversation.save();
     }
+
+    await conversation.populate("participants", "fullName profilePic")
 
     const selectedUser = conversation.participants.find(
       (user) => user._id.toString() !== currentUserId.toString()

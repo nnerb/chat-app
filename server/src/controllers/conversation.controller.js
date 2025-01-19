@@ -17,10 +17,7 @@ export const getConversation = async (req, res) => {
 
     const conversation = await Conversation.findById(conversationId)
     .populate("participants", "fullName profilePic");
-    
-    if (!conversation) {
-      return res.status(404).json({ success: false, message: "Conversation not found" });
-    }
+  
 
     const messages = await Message.find({ conversationId: conversation._id })
     .populate("senderId", "fullName profilePic")
