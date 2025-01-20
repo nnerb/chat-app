@@ -18,6 +18,7 @@ export const getMessages = async (req, res) => {
   try {
     const { id: chatPartnerId } = req.params;
     const currentUserId = req.user._id
+    const LIMIT = 10
 
     let conversation = await Conversation.findOne({
       participants: { $all: [currentUserId, chatPartnerId] },
@@ -38,9 +39,18 @@ export const getMessages = async (req, res) => {
 
     const messages = await Message.find({ conversationId: conversation._id })
       .populate("senderId", "fullName profilePic")
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: -1 })
+      .limit(LIMIT);
 
-    return res.status(200).json({ messages, conversationId: conversation._id, selectedUser });
+    messages.reverse()
+    
+    return res.status(200).json({ 
+      messages, 
+      conversationId: conversation._id, 
+      selectedUser,
+      currentPage: 1,
+      hasMore: messages.length === LIMIT,
+    });
   } catch (error) {
     console.log("Error in getMessages controller", error);
     res.status(500).json({ success: false, message: "Internal server error" });

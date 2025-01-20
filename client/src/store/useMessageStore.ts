@@ -4,25 +4,12 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { AuthUser } from "./useAuthStore";
 import { MessageDataProps } from "../types";
+import { ConversationProps, MessagesProps } from "./types/auth-types";
 
-
-interface MessagesProps {
- _id: string;
- senderId: AuthUser;
- createdAt: string;
- image: string;
- text: string; 
-}
-
-interface ConversationProps {
-  _id: string;
-  participants: string[];
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface UseMessageStoreProps {
   messages: MessagesProps[];
+  setMessages: (messages: MessagesProps[]) => void
   users: AuthUser[];
   selectedUser: AuthUser | null;
   isUsersLoading: boolean;
@@ -31,14 +18,20 @@ interface UseMessageStoreProps {
   conversation: ConversationProps | null;
   validConversationId: boolean | null;
   conversationIds: string[] | null;
+  currentPage: number;
+  hasMoreMessages: boolean | null;
+  isFetchingMoreMessages: boolean;
+  setCurrentPage: (currentPage: number) => void
   getUsers: () => Promise<void>;
   getMessages: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
+  fetchMoreMessages: (conversationId: string, currentPage: number) => Promise<void>
   getConversation: (conversationId: string) => Promise<void>;
   sendMessage: (messageData: MessageDataProps) => Promise<void>;
 }
 
 export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   messages: [],
+  setMessages: (messages) => set({ messages }),
   users: [],
   selectedUser: null,
   isConversationLoading: false,
@@ -47,6 +40,10 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   conversation: null,
   validConversationId: null,
   conversationIds: null,
+  currentPage: 1,
+  hasMoreMessages: null,
+  isFetchingMoreMessages: false,
+  setCurrentPage: (currentPage) => set({ currentPage }),
   getUsers: async () => {
     set({ isUsersLoading: true });
     try {
@@ -71,6 +68,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       // Fetch or create conversation with the selected user
       const res = await axiosInstance.get(`/messages/${selectedUser?._id}`);
       const conversationId = res.data.conversationId;
+      const { hasMore, currentPage } = res.data
   
       if (conversationId) {
         set({ 
@@ -78,6 +76,8 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
           conversation: res.data.conversation,
           selectedUser: res.data.selectedUser,  
           validConversationId: true,
+          hasMoreMessages: hasMore,
+          currentPage
         })
         navigate(`/messages/${conversationId}`);
       } else {
@@ -94,15 +94,39 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       set({ isMessagesLoading: false });
     }
   },
+  fetchMoreMessages: async (conversationId, currentPage) => {
+    set({ isFetchingMoreMessages: true });
+    try {
+      const res = await axiosInstance.get(`/conversation/${conversationId}`, {
+        params: { page: currentPage + 1, limit: 10 },
+      });
+      const { messages, hasMore } = res.data;
+      if (messages.length) {
+        set((state) => ({
+          messages: [...messages, ...state.messages],
+          currentPage: currentPage + 1,
+          hasMoreMessages: hasMore
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch more messages:", error);
+      toast.error("Failed to load older messages.");
+    } finally {
+      set({ isFetchingMoreMessages: false });
+    }
+  },  
   getConversation: async (conversationId) => {
     set({ isConversationLoading: true });
     try {
       const res = await axiosInstance.get(`/conversation/${conversationId}`);
+      const { hasMore, currentPage } = res.data
       set({ 
         messages: res.data.messages, 
         selectedUser: res.data.selectedUser, 
         conversation: res.data.conversation,
-        validConversationId: true
+        validConversationId: true,
+        hasMoreMessages: hasMore,
+        currentPage
       });
     } catch (error) {
       if (axios.isAxiosError(error)) {

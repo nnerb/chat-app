@@ -6,6 +6,7 @@ export const getConversation = async (req, res) => {
   try {
     const { id: conversationId } = req.params; 
     const currentUserId = req.user._id;
+    const { page = 1, limit = 10 } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       console.error("Invalid ObjectId format:", conversationId);
@@ -21,7 +22,11 @@ export const getConversation = async (req, res) => {
 
     const messages = await Message.find({ conversationId: conversation._id })
     .populate("senderId", "fullName profilePic")
-    .sort({ createdAt: 1 })
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+    messages.reverse()
     
     const selectedUser = conversation.participants.find(
       (user) => user._id.toString() !== currentUserId.toString()
@@ -35,6 +40,8 @@ export const getConversation = async (req, res) => {
       conversation,
       messages,
       selectedUser,
+      currentPage: parseInt(page),
+      hasMore: messages.length === parseInt(limit),
     });
   } catch (error) {
     console.log("Error in getConversation controller", error);
