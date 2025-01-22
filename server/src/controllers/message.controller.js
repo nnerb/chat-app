@@ -2,6 +2,7 @@ import cloudinary from "../lib/cloudinary.js"
 import Conversation from "../models/conversation.model.js"
 import Message from "../models/message.model.js"
 import User from "../models/user.model.js"
+import { getReceiverSocketId, io } from "../socket.js"
 
 export const getUsersForSidebar = async(req, res) => {
   try {
@@ -92,6 +93,11 @@ export const sendMessage = async(req, res) => {
     })
 
     await newMessage.save()
+
+    const receiverSocketId = getReceiverSocketId(chatPartnerId)
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage)
+    }
 
     const messages = await Message.find({ conversationId: conversation._id })
     .populate("senderId", "fullName profilePic")

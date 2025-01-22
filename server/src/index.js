@@ -5,13 +5,13 @@ import conversationRoutes from "./routes/conversation.route.js"
 import dotenv from "dotenv"
 import cookieParser from "cookie-parser"
 import cors from "cors"
+import { app, server } from "./socket.js"
 
 // Database connection function
 import { connectDB } from "./lib/db.js"
 
 dotenv.config()
 
-const app = express()
 const PORT = process.env.PORT || 5001
 
 
@@ -29,7 +29,7 @@ app.use("/api/conversation", conversationRoutes)
 app.use("/api/messages", messageRoutes)
 
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log("Server is running on PORT: ", PORT)
   connectDB()
 })
