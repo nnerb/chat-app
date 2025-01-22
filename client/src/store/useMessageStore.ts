@@ -2,7 +2,7 @@ import axios from "axios";
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
-import { AuthUser } from "./useAuthStore";
+import { AuthUser, useAuthStore } from "./useAuthStore";
 import { MessageDataProps } from "../types";
 import { ConversationProps, MessagesProps } from "./types/auth-types";
 
@@ -27,6 +27,8 @@ interface UseMessageStoreProps {
   fetchMoreMessages: (conversationId: string, currentPage: number) => Promise<void>
   getConversation: (conversationId: string) => Promise<void>;
   sendMessage: (messageData: MessageDataProps) => Promise<void>;
+  subscribeToMessages: () => void;
+  unsubscribeToMessages: () => void;
 }
 
 export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
@@ -147,7 +149,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     const { selectedUser } = get();
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser?._id}`, messageData);
-
       set({ messages: res.data.messages });
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -160,4 +161,18 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       }
     }
   },
+  subscribeToMessages: () => {
+    const { selectedUser, messages } = get()
+    const socket = useAuthStore.getState().socket
+    if (!selectedUser) return
+    socket?.on("newMessage", (newMessage) => {
+      const isMessageSentFromSelectedUser = newMessage.senderId !== selectedUser._id
+      if (isMessageSentFromSelectedUser) return
+      set({ messages: [...messages, newMessage] })
+    })
+  },
+  unsubscribeToMessages: () => {
+    const socket = useAuthStore.getState().socket
+    socket?.off("newMessage")
+  }
 })) 

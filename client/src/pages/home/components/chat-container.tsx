@@ -21,7 +21,9 @@ const ChatContainer = () => {
     hasMoreMessages,
     currentPage,
     isFetchingMoreMessages,
-    fetchMoreMessages
+    fetchMoreMessages,
+    subscribeToMessages,
+    unsubscribeToMessages
   } = useMessageStore()
 
   const messageEndRef = useRef<HTMLDivElement>(null)
@@ -37,6 +39,7 @@ const ChatContainer = () => {
         if(conversationId) {
           const fetchMoreMessagesHandler = async() => {
             await fetchMoreMessages(conversationId, currentPage)
+           
           }
           fetchMoreMessagesHandler()
         }
@@ -53,7 +56,9 @@ const ChatContainer = () => {
       } 
     }
     fetchConversation()
-  },[conversationId, getConversation, validConversationId])
+    subscribeToMessages()
+    return () => unsubscribeToMessages()
+  },[conversationId, getConversation, validConversationId, subscribeToMessages, unsubscribeToMessages])
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
