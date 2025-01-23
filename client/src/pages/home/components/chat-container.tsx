@@ -39,7 +39,6 @@ const ChatContainer = () => {
         if(conversationId) {
           const fetchMoreMessagesHandler = async() => {
             await fetchMoreMessages(conversationId, currentPage)
-           
           }
           fetchMoreMessagesHandler()
         }
@@ -56,15 +55,15 @@ const ChatContainer = () => {
       } 
     }
     fetchConversation()
-    subscribeToMessages()
-    return () => unsubscribeToMessages()
-  },[conversationId, getConversation, validConversationId, subscribeToMessages, unsubscribeToMessages])
+  },[conversationId, getConversation, validConversationId])
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
-      messageEndRef.current.scrollIntoView();
+      messageEndRef.current.scrollIntoView(); 
     }
-  }, [messages, conversationId]);
+    subscribeToMessages()
+    return () => unsubscribeToMessages()
+  }, [messages, conversationId, subscribeToMessages, unsubscribeToMessages]);
 
   if (isConversationLoading || isMessagesLoading) {
     return (
