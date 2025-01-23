@@ -10,11 +10,9 @@ interface IndividualChatProps {
 
 const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }) => {
 
-  const { authUser } = useAuthStore()
+  const { authUser, onlineUsers } = useAuthStore()
   return ( 
     <>
-    {
-      message.senderId._id !== authUser?._id &&
       <div className=" chat-image avatar">
         <div className="size-10 rounded-full border">
           <img
@@ -25,7 +23,14 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
             }
             alt="profile pic"
           />
-          {(authUser?._id !== message.senderId._id) && (
+          {message.senderId._id === authUser?._id && (
+            <span
+              className="absolute bottom-0 right-0 size-3 bg-green-500 
+              rounded-full ring-2 ring-zinc-900"
+            /> 
+          )}
+
+          {(message.senderId._id !== authUser?._id) && onlineUsers.includes(selectedUser?._id || "") && (
             <span
               className="absolute bottom-0 right-0 size-3 bg-green-500 
               rounded-full ring-2 ring-zinc-900"
@@ -33,7 +38,6 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
           )}
         </div>
       </div>
-      } 
       <div className="chat-header mb-1">
         <time className="text-xs opacity-50 ml-1">
           {formatMessageTime(message.createdAt)}
