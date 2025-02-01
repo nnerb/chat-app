@@ -18,6 +18,14 @@ export const getConversation = async (req, res) => {
 
     const conversation = await Conversation.findById(conversationId)
     .populate("participants", "fullName profilePic");
+
+    if (!conversation) {
+      console.log('Conversation not found')
+      return res.status(400).json({
+        success: false,
+        message: "Conversation not found",
+      });
+    }
   
 
     const messages = await Message.find({ conversationId: conversation._id })
