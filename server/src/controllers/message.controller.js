@@ -172,8 +172,10 @@ export const generateReply = async (req, res) => {
 
     // Identify the recipient
     const recipient = conversation.participants.find(
-      (participant) => participant._id !== currentUserId
+      (participant) => participant._id.toString() !== currentUserId.toString()
     );
+
+    console.log(conversation)
 
     if (!recipient) {
       return res.status(404).json({ success: false, message: "Recipient not found" });
@@ -184,16 +186,18 @@ export const generateReply = async (req, res) => {
     // Format the messages for the AI
     const formattedHistory = pastMessages.map((msg) => ({
       role: "user", // All past messages are from users
-      content: `${msg.senderId.toString() === currentUserId.toString() ? fullName : recipientName}: ${msg.text}`,
+      content: `${msg.senderId.toString() === currentUserId.toString() ? fullName : recipientName }: ${msg.text}`,
     }));
+
+    console.log(formattedHistory)
 
      // Analyze the context of the conversation using OpenAI
      const contextAnalysisPrompt = `
-     Analyze the following conversation and extract key themes, topics, and context.
-     Conversation:
-     ${formattedHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}
-     Selected Message: ${selectedMessage.text}
-   `;
+      Analyze the following conversation and extract key themes, topics, and context.
+      Conversation:
+      ${formattedHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}
+      Selected Message: ${selectedMessage.text}
+    `;
 
     const contextResponse = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -205,8 +209,6 @@ export const generateReply = async (req, res) => {
 
     const analyzedContext = contextResponse.choices[0].message.content.trim();
 
-    console.log(analyzedContext)
-
     // AI system instructions
     const systemPrompt = `
       You are ${fullName}, replying to ${recipientName}. 
@@ -216,7 +218,7 @@ export const generateReply = async (req, res) => {
       - Do not prefix the reply options with numbers, bullet points, or "${fullName}:".
       - Reply in used current language or mix unless the conversation is in English.
       - Detect if sender normally starts the conversation with capital or small letter.
-      - Ensure the response is a clean array of 3 reply options.`;
+    `;
 
     // Generate AI reply options
     const response = await openai.chat.completions.create({
