@@ -17,3 +17,8 @@ export interface MessageDataProps {
   text: string;
   image: string;
 }
+
+export interface AIGeneratedResponseProps {
+  selectedMessageId: string | null, 
+  conversationId: string
+}

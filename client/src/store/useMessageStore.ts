@@ -3,9 +3,8 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { AuthUser, useAuthStore } from "./useAuthStore";
-import { MessageDataProps } from "../types";
+import { AIGeneratedResponseProps, MessageDataProps } from "../types";
 import { ConversationProps, MessagesProps } from "./types/auth-types";
-
 
 interface UseMessageStoreProps {
   messages: MessagesProps[];
@@ -21,6 +20,10 @@ interface UseMessageStoreProps {
   currentPage: number;
   hasMoreMessages: boolean | null;
   isFetchingMoreMessages: boolean;
+  aiGeneratedResponse: string[] | null;
+  isGeneratingAIResponse: boolean;
+  selectedMessageId: string | null;
+  cachedAIResponses: Map<string, string[]>;
   setCurrentPage: (currentPage: number) => void
   getUsers: () => Promise<void>;
   getMessages: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
@@ -29,6 +32,7 @@ interface UseMessageStoreProps {
   sendMessage: (messageData: MessageDataProps) => Promise<void>;
   subscribeToMessages: () => void;
   unsubscribeToMessages: () => void;
+  generateAIResponse: (data: AIGeneratedResponseProps, regenerate?: boolean) => Promise<void>
 }
 
 export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
@@ -44,7 +48,11 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   conversationIds: null,
   currentPage: 1,
   hasMoreMessages: null,
+  aiGeneratedResponse: null,
   isFetchingMoreMessages: false,
+  isGeneratingAIResponse: false,
+  selectedMessageId: null,
+  cachedAIResponses: new Map(),
   setCurrentPage: (currentPage) => set({ currentPage }),
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -174,5 +182,36 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   unsubscribeToMessages: () => {
     const socket = useAuthStore.getState().socket
     socket?.off("newMessage")
+  },
+  generateAIResponse: async (data, regenerate) => {
+    set({ isGeneratingAIResponse: true })
+    try {
+      
+      const cacheKey = `${data.conversationId}-${data.selectedMessageId}`;
+      const cachedResponses = get().cachedAIResponses.get(cacheKey);
+
+      if (cachedResponses && !regenerate) {
+        set({ aiGeneratedResponse: cachedResponses, selectedMessageId: data.selectedMessageId });
+        return;
+      }
+
+      const res = await axiosInstance.post(`/messages/generate-reply`, data);
+      set((state) => ({
+        aiGeneratedResponse: res.data.replyOptions,
+        selectedMessageId: data.selectedMessageId,
+        cachedAIResponses: new Map(state.cachedAIResponses).set(cacheKey, res.data.replyOptions),
+      }));
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        // Narrowing the type of error to AxiosError
+        const errorMessage = error.response?.data?.message || 'An error occurred while generating ai message';
+        toast.error(errorMessage);
+      } else {
+        // Handle non-Axios errors
+        toast.error('An unexpected error occurred');
+      }
+    } finally {
+      set({ isGeneratingAIResponse: false })
+    }
   }
 })) 

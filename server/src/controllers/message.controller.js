@@ -159,7 +159,7 @@ export const generateReply = async (req, res) => {
 
     // Fetch user and conversation details
     const user = await User.findById(currentUserId);
-    const { fullName, aiPreferences } = user;
+    const { fullName } = user;
    
     const conversation = await Conversation.findById(conversationId).populate(
       "participants",
@@ -189,56 +189,39 @@ export const generateReply = async (req, res) => {
       content: `${msg.senderId.toString() === currentUserId.toString() ? fullName : recipientName }: ${msg.text}`,
     }));
 
-    console.log(formattedHistory)
-
-     // Analyze the context of the conversation using OpenAI
-     const contextAnalysisPrompt = `
-      Analyze the following conversation and extract key themes, topics, and context.
-      Conversation:
-      ${formattedHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}
-      Selected Message: ${selectedMessage.text}
-    `;
-
-    const contextResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are a helpful assistant that analyzes conversation context." },
-        { role: "user", content: contextAnalysisPrompt },
-      ],
-    });
-
-    const analyzedContext = contextResponse.choices[0].message.content.trim();
-
-    // AI system instructions
+     // AI system instructions
     const systemPrompt = `
-      You are ${fullName}, replying to ${recipientName}. 
-      - The conversation context is: ${analyzedContext}.
-      - Generate **3 concise and distinct reply options** for the user to choose from.
-      - Each reply option should be a **single sentence or short phrase**.
-      - Do not prefix the reply options with numbers, bullet points, or "${fullName}:".
-      - Reply in used current language or mix unless the conversation is in English.
-      - Detect if sender normally starts the conversation with capital or small letter.
-    `;
+    You are ${fullName}, replying to ${recipientName}. 
+    - Analyze the following conversation and extract key themes, topics, and context.
+    - Generate **3 concise and distinct reply options** for the user to choose from.
+    - Each reply option should be a **single sentence or short phrase**.
+    - Do not prefix the reply options with numbers, bullet points, or "${fullName}:".
+    - Reply in used current language or mix unless the conversation is in English.
+    - Detect if sender normally starts the conversation with capital or small letter.
 
-    // Generate AI reply options
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", 
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...formattedHistory,
-        { role: "user", content: selectedMessage.text }, // The selected message
-      ],
-      n: 3,
-      max_tokens: 50,
-      temperature: 0.5
-    });
+    Conversation:
+    ${formattedHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}
+    Selected Message: ${selectedMessage.text}
+  `;
 
-    // Extract the reply options (just the message content)
-    const replyOptions = response.choices.map((choice) => choice.message.content.trim());
+  // Generate AI reply options
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini", 
+    messages: [
+      { role: "system", content: systemPrompt },
+      ...formattedHistory,
+      { role: "user", content: selectedMessage.text }, // The selected message
+    ],
+    n: 3,
+    max_tokens: 100, // Slightly increased to accommodate context analysis
+    temperature: 0.5
+  });
 
-    // Return the reply options as an array of strings
-    res.status(201).json({ replyOptions });
+  // Extract the reply options (just the message content)
+  const replyOptions = response.choices.map((choice) => choice.message.content.trim());
 
+  // Return the reply options as an array of strings
+  res.status(201).json({ replyOptions });
   } catch (error) {
     console.log("Error in generateReply controller", error)
     res.status(500).json({ success: false, message: "Internal server error" })
