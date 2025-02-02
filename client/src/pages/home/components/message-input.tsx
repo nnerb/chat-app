@@ -5,10 +5,9 @@ import { useMessageStore } from "../../../store/useMessageStore";
 import { MessageDataProps } from "../../../types";
 
 const MessageInput = () => {
-  const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState<string | ArrayBuffer | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { sendMessage } = useMessageStore()
+  const { sendMessage, text, setText  } = useMessageStore()
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

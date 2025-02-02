@@ -7,6 +7,8 @@ import { AIGeneratedResponseProps, MessageDataProps } from "../types";
 import { ConversationProps, MessagesProps } from "./types/auth-types";
 
 interface UseMessageStoreProps {
+  text: string;
+  setText: (text: string) => void
   messages: MessagesProps[];
   setMessages: (messages: MessagesProps[]) => void
   users: AuthUser[];
@@ -36,6 +38,8 @@ interface UseMessageStoreProps {
 }
 
 export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
+  text: "",
+  setText: (text) => set({ text }),
   messages: [],
   setMessages: (messages) => set({ messages }),
   users: [],

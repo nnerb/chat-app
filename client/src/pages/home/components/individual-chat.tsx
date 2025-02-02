@@ -14,7 +14,13 @@ interface IndividualChatProps {
 const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }) => {
 
   const { authUser, onlineUsers } = useAuthStore()
-  const { aiGeneratedResponse, generateAIResponse, isGeneratingAIResponse, selectedMessageId } = useMessageStore()
+  const { 
+    aiGeneratedResponse, 
+    generateAIResponse, 
+    isGeneratingAIResponse, 
+    selectedMessageId, 
+    setText 
+  } = useMessageStore()
 
   const { conversationId } = useParams(); 
   const handleGenerateAIResponse = async() => {
@@ -123,6 +129,11 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
                       p-4 bg-base-200 rounded-lg cursor-pointer hover:bg-base-300 
                       transition-colors duration-200 flex items-start space-x-3
                     "
+                    onClick={() => {
+                      const modal = document.getElementById("my_modal_2");
+                      if (modal) (modal as HTMLDialogElement).close(); 
+                      setText(res)
+                    }}
                   >
                     {/* Icon */}
                     <MessageSquare className="text-primary"/>
@@ -150,7 +161,6 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
                 Regenerate
               </button>
             </div>
-              
           <form method="dialog" className="modal-backdrop">
             <button>close</button>
           </form>

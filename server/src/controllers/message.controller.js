@@ -153,7 +153,6 @@ export const generateReply = async (req, res) => {
       createdAt: { $lt: selectedMessage.createdAt }, // Messages before the selected message
     })
       .sort({ createdAt: -1 }) // Sort by createdAt in descending order
-      .limit(7); // Limit to 7 messages
 
     pastMessages.reverse()
 
@@ -186,22 +185,17 @@ export const generateReply = async (req, res) => {
     // Format the messages for the AI
     const formattedHistory = pastMessages.map((msg) => ({
       role: "user", // All past messages are from users
-      content: `${msg.senderId.toString() === currentUserId.toString() ? fullName : recipientName }: ${msg.text}`,
+      content: msg.text,
     }));
 
      // AI system instructions
     const systemPrompt = `
-    You are ${fullName}, replying to ${recipientName}. 
-    - Analyze the following conversation and extract key themes, topics, and context.
-    - Generate **3 concise and distinct reply options** for the user to choose from.
-    - Each reply option should be a **single sentence or short phrase**.
-    - Do not prefix the reply options with numbers, bullet points, or "${fullName}:".
-    - Reply in used current language or mix unless the conversation is in English.
+    - You are ${fullName} having a conversation with ${recipientName}. 
+    - Your goal is to provide concise, relevant, and polite replies based on the conversation context.
     - Detect if sender normally starts the conversation with capital or small letter.
-
-    Conversation:
-    ${formattedHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}
-    Selected Message: ${selectedMessage.text}
+     Conversation:
+      ${formattedHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}
+      Selected Message: ${selectedMessage.text}
   `;
 
   // Generate AI reply options
@@ -213,8 +207,8 @@ export const generateReply = async (req, res) => {
       { role: "user", content: selectedMessage.text }, // The selected message
     ],
     n: 3,
-    max_tokens: 100, // Slightly increased to accommodate context analysis
-    temperature: 0.5
+    max_tokens: 50,
+    temperature: 0.7
   });
 
   // Extract the reply options (just the message content)
