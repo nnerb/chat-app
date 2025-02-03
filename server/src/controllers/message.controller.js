@@ -207,7 +207,7 @@ export const generateReply = async (req, res) => {
       { role: "user", content: selectedMessage.text }, // The selected message
     ],
     n: 3,
-    max_tokens: 50,
+    max_tokens: 20,
     temperature: 0.7
   });
 
