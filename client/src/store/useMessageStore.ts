@@ -188,6 +188,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     socket?.off("newMessage")
   },
   generateAIResponse: async (data, regenerate) => {
+    const modal = document.getElementById("my_modal_2");     
     set({ isGeneratingAIResponse: true })
     try {
       
@@ -208,10 +209,12 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     } catch (error) {
       if (axios.isAxiosError(error)) {
         // Narrowing the type of error to AxiosError
+        if (modal) (modal as HTMLDialogElement).close(); 
         const errorMessage = error.response?.data?.message || 'An error occurred while generating ai message';
         toast.error(errorMessage);
       } else {
         // Handle non-Axios errors
+        if (modal) (modal as HTMLDialogElement).close(); 
         toast.error('An unexpected error occurred');
       }
     } finally {
