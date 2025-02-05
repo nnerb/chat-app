@@ -191,9 +191,9 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     const modal = document.getElementById("my_modal_2");     
     set({ isGeneratingAIResponse: true })
     try {
-      
+      const { cachedAIResponses } = get()
       const cacheKey = `${data.conversationId}-${data.selectedMessageId}`;
-      const cachedResponses = get().cachedAIResponses.get(cacheKey);
+      const cachedResponses = cachedAIResponses.get(cacheKey)
 
       if (cachedResponses && !regenerate) {
         set({ aiGeneratedResponse: cachedResponses, selectedMessageId: data.selectedMessageId });
