@@ -12,14 +12,14 @@ import MessageInput from "./components/message-input";
 
 const HomePage = () => {
   const { conversationId } = useParams(); 
-  const { getConversation, validConversationId, isConversationLoading, isMessagesLoading } = useMessageStore()
+  const { getMessages, validConversationId, isMessagesLoading } = useMessageStore()
 
   useEffect(() => {
 
     if (conversationId && !validConversationId) {
-      getConversation(conversationId); // Fetch the conversation data based on conversationId
+      getMessages(conversationId); // Fetch the conversation data based on conversationId
     }
-  }, [conversationId, validConversationId, getConversation]);
+  }, [conversationId, validConversationId, getMessages]);
 
   return (
     <div className="h-screen bg-base-200">
@@ -31,7 +31,7 @@ const HomePage = () => {
               ? <NoChatSelected /> 
               : validConversationId 
               ? <ChatContainer/> 
-              : isConversationLoading || isMessagesLoading ? <div className="flex-1 flex flex-col">
+              : isMessagesLoading ? <div className="flex-1 flex flex-col">
               <ChatHeader />
               <MessageSkeleton />
               <MessageInput />

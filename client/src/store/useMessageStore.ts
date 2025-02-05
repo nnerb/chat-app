@@ -28,9 +28,9 @@ interface UseMessageStoreProps {
   cachedAIResponses: Map<string, string[]>;
   setCurrentPage: (currentPage: number) => void
   getUsers: () => Promise<void>;
-  getMessages: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
+  getConversation: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
   fetchMoreMessages: (conversationId: string, currentPage: number) => Promise<void>
-  getConversation: (conversationId: string) => Promise<void>;
+  getMessages: (conversationId: string) => Promise<void>;
   sendMessage: (messageData: MessageDataProps) => Promise<void>;
   subscribeToMessages: () => void;
   unsubscribeToMessages: () => void;
@@ -76,22 +76,18 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       set({ isUsersLoading: false });
     }
   },
-  getMessages: async (selectedUser, navigate) => {
-    set({ isMessagesLoading: true });
+  getConversation: async (selectedUser, navigate) => {
+    set({ isConversationLoading: true });
     try {
       // Fetch or create conversation with the selected user
-      const res = await axiosInstance.get(`/messages/${selectedUser?._id}`);
+      const res = await axiosInstance.get(`/conversation/${selectedUser?._id}`);
       const conversationId = res.data.conversationId;
-      const { hasMore, currentPage } = res.data
-  
+
       if (conversationId) {
         set({ 
-          messages: res.data.messages,
           conversation: res.data.conversation,
           selectedUser: res.data.selectedUser,  
           validConversationId: true,
-          hasMoreMessages: hasMore,
-          currentPage
         })
         navigate(`/messages/${conversationId}`);
       } else {
@@ -105,34 +101,13 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         toast.error("An unexpected error occurred.");
       }
     } finally {
-      set({ isMessagesLoading: false });
+      set({ isConversationLoading: false });
     }
   },
-  fetchMoreMessages: async (conversationId, currentPage) => {
-    set({ isFetchingMoreMessages: true });
+  getMessages: async (conversationId) => {
+    set({ isMessagesLoading : true });
     try {
-      const res = await axiosInstance.get(`/conversation/${conversationId}`, {
-        params: { page: currentPage + 1, limit: 10 },
-      });
-      const { messages, hasMore } = res.data;
-      if (messages.length) {
-        set((state) => ({
-          messages: [...messages, ...state.messages],
-          currentPage: currentPage + 1,
-          hasMoreMessages: hasMore
-        }));
-      }
-    } catch (error) {
-      console.error("Failed to fetch more messages:", error);
-      toast.error("Failed to load older messages.");
-    } finally {
-      set({ isFetchingMoreMessages: false });
-    }
-  },  
-  getConversation: async (conversationId) => {
-    set({ isConversationLoading: true });
-    try {
-      const res = await axiosInstance.get(`/conversation/${conversationId}`);
+      const res = await axiosInstance.get(`/messages/${conversationId}`);
       const { hasMore, currentPage } = res.data
       set({ 
         messages: res.data.messages, 
@@ -154,9 +129,30 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         set({ validConversationId: false })
       }
     } finally {
-      set({ isConversationLoading: false });
+      set({ isMessagesLoading: false });
     }
   },
+  fetchMoreMessages: async (conversationId, currentPage) => {
+    set({ isFetchingMoreMessages: true });
+    try {
+      const res = await axiosInstance.get(`/messages/${conversationId}`, {
+        params: { page: currentPage + 1, limit: 10 },
+      });
+      const { messages, hasMore } = res.data;
+      if (messages.length) {
+        set((state) => ({
+          messages: [...messages, ...state.messages],
+          currentPage: currentPage + 1,
+          hasMoreMessages: hasMore
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch more messages:", error);
+      toast.error("Failed to load older messages.");
+    } finally {
+      set({ isFetchingMoreMessages: false });
+    }
+  }, 
   sendMessage: async (messageData) => {
     const { selectedUser } = get();
     try {

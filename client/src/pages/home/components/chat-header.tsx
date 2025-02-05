@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "../../../store/useAuthStore";
 
 const ChatHeader = () => {
-  const { selectedUser } = useMessageStore();
+  const { selectedUser, isMessagesLoading } = useMessageStore();
   const { onlineUsers } = useAuthStore()
 
   return (
@@ -12,10 +12,18 @@ const ChatHeader = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar */}
-          <div className="avatar">
-            <div className="size-10 rounded-full relative">
-              <img src={selectedUser?.profilePic || "/avatar.png"} alt={selectedUser?.fullName} />
-            </div>
+          <div className="chat-image avatar">
+            {isMessagesLoading ? (
+              <div className="size-10 rounded-full">
+                <div className="skeleton w-full h-full rounded-full" />
+              </div> 
+              ) : (
+              <div className="size-10 rounded-full relative">
+                <img src={selectedUser?.profilePic || "/avatar.png"} alt={selectedUser?.fullName} />
+              </div>
+              )
+            }
+            
             {onlineUsers.includes(selectedUser?._id || "") && (
                <span
                className="absolute bottom-0 right-0 size-3 bg-green-500 
@@ -26,10 +34,21 @@ const ChatHeader = () => {
 
           {/* User info */}
           <div>
-            <h3 className="font-medium">{selectedUser?.fullName}</h3>
-            <p className="text-sm text-base-content/70">
-              {onlineUsers.includes(selectedUser?._id || "") ? "Active now" : ""} 
-            </p>
+            {isMessagesLoading ? (
+            <div className="chat-header flex flex-col gap-1">
+              <div className="skeleton h-4 w-24" />
+              <div className="skeleton h-4 w-14" />
+            </div>
+            ) : 
+            <>
+              <h3 className="font-medium">{selectedUser?.fullName}</h3>
+              <p className="text-sm text-base-content/70">
+                {onlineUsers.includes(selectedUser?._id || "") ? "Active now" : ""} 
+              </p>
+            </>
+            }
+            
+           
           </div>
         </div>
 

@@ -11,7 +11,7 @@ const Sidebar = () => {
     getUsers, 
     selectedUser, 
     users, 
-    getMessages, 
+    getConversation, 
     isUsersLoading, 
   } = useMessageStore();
   const { onlineUsers } = useAuthStore(); 
@@ -32,7 +32,7 @@ const Sidebar = () => {
     : users;
 
   const handleSelectUser = async(user: AuthUser) => {
-    await getMessages(user, navigate)
+    await getConversation(user, navigate)
   }
 
   if (isUsersLoading) return <SidebarSkeleton />;

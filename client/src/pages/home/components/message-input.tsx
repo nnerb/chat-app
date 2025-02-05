@@ -7,7 +7,7 @@ import { MessageDataProps } from "../../../types";
 const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState<string | ArrayBuffer | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { sendMessage, text, setText  } = useMessageStore()
+  const { sendMessage, text, setText, isMessagesLoading  } = useMessageStore()
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,9 +57,10 @@ const MessageInput = () => {
               className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
             />
             <button
+              disabled={isMessagesLoading}
               onClick={removeImage}
               className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300
-              flex items-center justify-center"
+              flex items-center justify-center disabled:btn-disabled"
               type="button"
             >
               <X className="size-3" />
@@ -72,10 +73,11 @@ const MessageInput = () => {
         <div className="flex-1 flex gap-2">
           <input
             type="text"
-            className="w-full input input-bordered rounded-lg input-sm sm:input-md"
+            className="w-full input input-bordered rounded-lg input-sm sm:input-md disabled:input-disabled"
             placeholder="Type a message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
+            disabled={isMessagesLoading}
           />
           <input
             type="file"
@@ -83,21 +85,23 @@ const MessageInput = () => {
             className="hidden"
             ref={fileInputRef}
             onChange={handleImageChange}
+            disabled={isMessagesLoading}
           />
 
           <button
             type="button"
-            className={`hidden sm:flex btn btn-circle
+            className={`hidden sm:flex btn btn-circle disabled:btn-disabled
                      ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
             onClick={() => fileInputRef.current?.click()}
+            disabled={isMessagesLoading}
           >
             <Image size={20} />
           </button>
         </div>
         <button
           type="submit"
-          className="btn btn-sm btn-circle"
-          disabled={!text.trim() && !imagePreview}
+          className="btn btn-sm btn-circle disabled:btn-disabled"
+          disabled={!text.trim() && !imagePreview || isMessagesLoading}
         >
           <Send size={22} />
         </button>

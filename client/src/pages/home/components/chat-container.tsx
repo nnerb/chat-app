@@ -13,9 +13,8 @@ import { useAuthStore } from "../../../store/useAuthStore";
 const ChatContainer = () => {
   const {
     messages,
-    isConversationLoading,
     selectedUser,
-    getConversation,
+    getMessages,
     validConversationId,
     isMessagesLoading,
     hasMoreMessages,
@@ -49,13 +48,13 @@ const ChatContainer = () => {
   },[isFetchingMoreMessages, currentPage, hasMoreMessages, conversationId, fetchMoreMessages])
 
   useEffect(() => {
-    const fetchConversation = async() => {
-      if (conversationId && !validConversationId) {
-        await getConversation(conversationId)
+    const fetchMessages = async() => {
+      if (conversationId) {
+        await getMessages(conversationId)
       } 
     }
-    fetchConversation()
-  },[conversationId, getConversation, validConversationId])
+    fetchMessages()
+  },[conversationId, getMessages, validConversationId])
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -65,7 +64,7 @@ const ChatContainer = () => {
     return () => unsubscribeToMessages()
   }, [messages, conversationId, subscribeToMessages, unsubscribeToMessages]);
 
-  if (isConversationLoading || isMessagesLoading) {
+  if (isMessagesLoading) {
     return (
       <div className="flex-1 flex flex-col">
         <ChatHeader />
