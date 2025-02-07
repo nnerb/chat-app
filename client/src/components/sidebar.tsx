@@ -5,8 +5,8 @@ import SidebarSkeleton from "./skeletons/sidebar-skeleton";
 import { useMessageStore } from "../store/useMessageStore";
 import { AuthUser, useAuthStore } from "../store/useAuthStore";
 import { useNavigate, useParams } from "react-router-dom";
-const Sidebar = () => {
 
+const Sidebar = () => {
   const { 
     getUsers, 
     selectedUser, 

@@ -9,10 +9,18 @@ import { useAuthStore } from "./store/useAuthStore";
 import { useEffect } from "react";
 import { useThemeStore } from "./store/useThemeStore";
 import Loading from "./components/skeletons/loading";
+import NoChatSelected from "./components/no-chat-selected";
+import ChatContainer from "./pages/home/components/chat-container";
+import { useMessageStore } from "./store/useMessageStore";
+import NotFound from "./components/not-found";
+import ChatHeader from "./pages/home/components/chat-header";
+import MessageSkeleton from "./components/skeletons/message-skeleton";
+import MessageInput from "./pages/home/components/message-input";
 
 const App = () => {
 
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore()
+  const { validConversationId, isMessagesLoading  } = useMessageStore()
   const { theme } = useThemeStore()
 
   useEffect(() => {
@@ -27,9 +35,22 @@ const App = () => {
       <Navbar />
       <Routes>
         <Route 
-          path="/messages" 
+          path="messages" 
           element={authUser ? <HomePage /> : <Navigate to="/login"/>}
-        />
+        >
+          <Route index element={<NoChatSelected />}/>
+          <Route path=":conversationId" element={
+            validConversationId 
+            ? <ChatContainer /> 
+            : isMessagesLoading 
+            ? <div className="flex-1 flex flex-col">
+                <ChatHeader />
+                <MessageSkeleton />
+                <MessageInput />
+              </div> 
+            : <NotFound /> 
+          }/>
+        </Route>
         <Route 
           path="/messages/:conversationId" 
           element={authUser ? <HomePage /> : <Navigate to="/login"/>}

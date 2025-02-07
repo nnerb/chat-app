@@ -15,14 +15,13 @@ const ChatContainer = () => {
     messages,
     selectedUser,
     getMessages,
-    validConversationId,
     isMessagesLoading,
     hasMoreMessages,
     currentPage,
     isFetchingMoreMessages,
     fetchMoreMessages,
     subscribeToMessages,
-    unsubscribeToMessages
+    unsubscribeToMessages,
   } = useMessageStore()
 
   const messageEndRef = useRef<HTMLDivElement>(null)
@@ -44,17 +43,17 @@ const ChatContainer = () => {
       }
     })
     if (node) observer.current.observe(node)
-  
+
   },[isFetchingMoreMessages, currentPage, hasMoreMessages, conversationId, fetchMoreMessages])
 
   useEffect(() => {
     const fetchMessages = async() => {
       if (conversationId) {
         await getMessages(conversationId)
-      } 
+      }
     }
     fetchMessages()
-  },[conversationId, getMessages, validConversationId])
+  },[conversationId, getMessages])
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -78,40 +77,20 @@ const ChatContainer = () => {
     <div className="flex-1 flex flex-col overflow-y-auto">
       <ChatHeader />
       <div className="flex-1 overflow-y-auto p-4 space-y-4 overflow-x-hidden relative">
-        { isFetchingMoreMessages && 
+        {isFetchingMoreMessages && (
           <div className="text-center grid place-items-center">
-            <Loader2 className="animate-spin"/>
+            <Loader2 className="animate-spin" />
           </div>
-        }
-        {messages.map((message, index) => {
-          if (index === 0) {
-            return (
-              <div
-                key={message._id}
-                className={`chat ${message.senderId._id === authUser?._id ? "chat-end" : "chat-start"}`}
-                ref={topMessageRef}
-              >
-                <IndividualChat 
-                message={message}
-                selectedUser={selectedUser}
-                />
-              </div>
-            )
-          }  else {
-            return (
-              <div
-                key={message._id}
-                className={`chat ${message.senderId._id === authUser?._id ? "chat-end" : "chat-start"}`}
-                ref={messageEndRef}
-              >
-                <IndividualChat
-                  message={message}
-                  selectedUser={selectedUser}
-                />
-              </div>
-            )
-          }
-        })}
+        )}
+        {messages.map((message, index) => (
+          <div
+            key={message._id}
+            className={`chat ${message.senderId._id === authUser?._id ? "chat-end" : "chat-start"}`}
+            ref={index === 0 ? topMessageRef : messageEndRef} // Use refs only when needed
+          >
+            <IndividualChat message={message} selectedUser={selectedUser} />
+          </div>
+        ))}
       </div>
       <MessageInput />
     </div>
