@@ -16,6 +16,7 @@ export interface UpdateProfileProps {
 export interface MessageDataProps {
   text: string;
   image: string;
+  conversationId: string;
 }
 
 export interface AIGeneratedResponseProps {

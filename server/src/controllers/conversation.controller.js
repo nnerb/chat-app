@@ -24,7 +24,7 @@ export const getConversation = async (req, res) => {
     );
 
     return res.status(200).json({ 
-      conversationId: conversation._id, 
+      conversation,
       selectedUser,
     });
   } catch (error) {

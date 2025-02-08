@@ -1,7 +1,7 @@
 
 import { EllipsisVertical, Loader, MessageSquare, RefreshCcw } from "lucide-react";
 import { formatMessageTime } from "../../../lib/utils";
-import { MessagesProps } from "../../../store/types/auth-types";
+import { MessagesProps } from "../../../store/types/message-types";
 import { AuthUser, useAuthStore } from "../../../store/useAuthStore";
 import { useMessageStore } from "../../../store/useMessageStore";
 import { useParams } from "react-router-dom";

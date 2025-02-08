@@ -4,7 +4,8 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { AuthUser, useAuthStore } from "./useAuthStore";
 import { AIGeneratedResponseProps, MessageDataProps } from "../types";
-import { ConversationProps, MessagesProps } from "./types/auth-types";
+import {  MessagesProps } from "./types/message-types";
+import { ConversationProps, ConversationResponse } from "./types/conversation-types";
 
 interface UseMessageStoreProps {
   text: string;
@@ -26,7 +27,9 @@ interface UseMessageStoreProps {
   isGeneratingAIResponse: boolean;
   selectedMessageId: string | null;
   cachedAIResponses: Map<string, string[]>;
-  setCurrentPage: (currentPage: number) => void
+  cachedMessages: Map<string, MessagesProps[]>;
+  cachedHasMoreMessages: Map<string, boolean>;
+  cachedConversation: Map<string, ConversationProps | null>;
   getUsers: () => Promise<void>;
   getConversation: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
   fetchMoreMessages: (conversationId: string, currentPage: number) => Promise<void>
@@ -57,7 +60,9 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   isGeneratingAIResponse: false,
   selectedMessageId: null,
   cachedAIResponses: new Map(),
-  setCurrentPage: (currentPage) => set({ currentPage }),
+  cachedMessages: new Map(),
+  cachedHasMoreMessages: new Map(),
+  cachedConversation: new Map(),
   getUsers: async () => {
     set({ isUsersLoading: true });
     try {
@@ -77,19 +82,30 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     }
   },
   getConversation: async (selectedUser, navigate) => {
+    if (!selectedUser?._id) return;
+    const { cachedConversation } = get()
+    const cachedConversationResponse = cachedConversation.get(selectedUser._id)
+
+    if (cachedConversationResponse) {
+      set({ conversation: cachedConversationResponse, selectedUser })
+      navigate(`/messages/${cachedConversationResponse._id}`);
+      return
+    }
+
     set({ isConversationLoading: true });
     try {
       // Fetch or create conversation with the selected user
       const res = await axiosInstance.get(`/conversation/${selectedUser?._id}`);
-      const conversationId = res.data.conversationId;
+      const { conversation }  = res.data as ConversationResponse
 
-      if (conversationId) {
-        set({ 
-          conversation: res.data.conversation,
-          selectedUser: res.data.selectedUser,  
+      if (conversation) {
+        set((state) => ({ 
+          conversation,
+          selectedUser,
           validConversationId: true,
-        })
-        navigate(`/messages/${conversationId}`);
+          cachedConversation: new Map(state.cachedConversation).set(selectedUser._id, conversation)
+        }))
+        navigate(`/messages/${conversation._id}`);
       } else {
         throw new Error("Failed to retrieve conversation.");
       }
@@ -105,18 +121,33 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     }
   },
   getMessages: async (conversationId) => {
+    const { cachedMessages, cachedHasMoreMessages } = get();
+
+    const cachedMessagesResponse =  cachedMessages.get(conversationId)
+    const cachedHasMoreMessagesResponse = cachedHasMoreMessages.get(conversationId)
+    
+    if (cachedMessagesResponse) {
+      set({
+        messages: cachedMessagesResponse,
+        hasMoreMessages: cachedHasMoreMessagesResponse,
+        currentPage: 1
+      })
+      return;
+    }
     set({ isMessagesLoading : true });
     try {
       const res = await axiosInstance.get(`/messages/${conversationId}`);
-      const { hasMore, currentPage } = res.data
-      set({ 
-        messages: res.data.messages, 
-        selectedUser: res.data.selectedUser, 
-        conversation: res.data.conversation,
+      const { hasMore, currentPage, messages, selectedUser, conversation } = res.data
+      set((state) => ({ 
+        messages, 
+        selectedUser, 
+        conversation,
         validConversationId: true,
         hasMoreMessages: hasMore,
-        currentPage
-      });
+        currentPage,
+        cachedMessages: new Map(state.cachedMessages).set(conversationId, messages),
+        cachedHasMoreMessages: new Map(state.cachedHasMoreMessages).set(conversationId, hasMore)
+      }));
     } catch (error) {
       if (axios.isAxiosError(error)) {
         // Narrowing the type of error to AxiosError
@@ -138,6 +169,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       const res = await axiosInstance.get(`/messages/${conversationId}`, {
         params: { page: currentPage + 1, limit: 10 },
       });
+      console.log(currentPage)
       const { messages, hasMore } = res.data;
       if (messages.length) {
         set((state) => ({

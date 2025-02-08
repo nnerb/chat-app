@@ -3,11 +3,13 @@ import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMessageStore } from "../../../store/useMessageStore";
 import { MessageDataProps } from "../../../types";
+import { useParams } from "react-router-dom";
 
 const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState<string | ArrayBuffer | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { sendMessage, text, setText, isMessagesLoading  } = useMessageStore()
+  const { conversationId } = useParams();
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,6 +38,7 @@ const MessageInput = () => {
       await sendMessage({
         text: text.trim(),
         image: imagePreview,
+        conversationId: conversationId
       } as MessageDataProps);
 
       setText("");
