@@ -6,7 +6,7 @@ import { useEffect } from "react";
 
 const HomePage = () => {
   const { conversationId } = useParams(); 
-  const { getMessages, validConversationId} = useMessageStore()
+  const { getMessages, validConversationId } = useMessageStore()
 
   useEffect(() => {
     const fetchConversation = async () => {

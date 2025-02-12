@@ -1,6 +1,5 @@
 import mongoose from "mongoose"
 import cloudinary from "../lib/cloudinary.js"
-import { detectUserPreferences } from "../lib/preferenceAnalyzer.js"
 import Conversation from "../models/conversation.model.js"
 import Message from "../models/message.model.js"
 import User from "../models/user.model.js"
@@ -117,11 +116,14 @@ export const sendMessage = async(req, res) => {
       io.to(receiverSocketId).emit("newMessage", newMessage)
     }
 
+    io.to(receiverSocketId).emit("updateConversations", { chatPartnerId: currentUserId, newMessage })
+
     const messages = await Message.find({ conversationId: conversation._id })
     .populate("senderId", "fullName profilePic")
-    .sort({ createdAt: 1 })
+    .sort({ createdAt: -1 })
+    .limit(10)
 
-    await detectUserPreferences(currentUserId, conversation._id);
+    messages.reverse()
 
     res.status(201).json({ newMessage, messages })
 

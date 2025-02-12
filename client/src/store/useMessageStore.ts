@@ -30,6 +30,7 @@ interface UseMessageStoreProps {
   cachedMessages: Map<string, MessagesProps[]>;
   cachedHasMoreMessages: Map<string, boolean>;
   cachedConversation: Map<string, ConversationProps | null>;
+  resetMessages: () => void;
   getUsers: () => Promise<void>;
   getConversation: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
   fetchMoreMessages: (conversationId: string, currentPage: number) => Promise<void>
@@ -45,6 +46,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   setText: (text) => set({ text }),
   messages: [],
   setMessages: (messages) => set({ messages }),
+  resetMessages: () => set({ messages: [], selectedUser: null }),
   users: [],
   selectedUser: null,
   isConversationLoading: false,
@@ -87,7 +89,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     const cachedConversationResponse = cachedConversation.get(selectedUser._id)
 
     if (cachedConversationResponse) {
-      set({ conversation: cachedConversationResponse, selectedUser })
+      set({ conversation: cachedConversationResponse })
       navigate(`/messages/${cachedConversationResponse._id}`);
       return
     }
@@ -121,32 +123,33 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     }
   },
   getMessages: async (conversationId) => {
-    const { cachedMessages, cachedHasMoreMessages } = get();
+    // const { cachedMessages, cachedHasMoreMessages, selectedUser } = get();
 
-    const cachedMessagesResponse =  cachedMessages.get(conversationId)
-    const cachedHasMoreMessagesResponse = cachedHasMoreMessages.get(conversationId)
+    // const cachedMessagesResponse =  cachedMessages.get(conversationId)
+    // const cachedHasMoreMessagesResponse = cachedHasMoreMessages.get(conversationId)
     
-    if (cachedMessagesResponse) {
-      set({
-        messages: cachedMessagesResponse,
-        hasMoreMessages: cachedHasMoreMessagesResponse,
-        currentPage: 1
-      })
-      return;
-    }
+    // if (cachedMessagesResponse) {
+    //   set({
+    //     messages: cachedMessagesResponse,
+    //     hasMoreMessages: cachedHasMoreMessagesResponse,
+    //     currentPage: 1,
+    //     selectedUser
+    //   })
+    //   return;
+    // }
     set({ isMessagesLoading : true });
     try {
       const res = await axiosInstance.get(`/messages/${conversationId}`);
       const { hasMore, currentPage, messages, selectedUser, conversation } = res.data
-      set((state) => ({ 
+      set(() => ({ 
         messages, 
         selectedUser, 
         conversation,
         validConversationId: true,
         hasMoreMessages: hasMore,
         currentPage,
-        cachedMessages: new Map(state.cachedMessages).set(conversationId, messages),
-        cachedHasMoreMessages: new Map(state.cachedHasMoreMessages).set(conversationId, hasMore)
+        // cachedMessages: new Map(state.cachedMessages).set(conversationId, messages),
+        // cachedHasMoreMessages: new Map(state.cachedHasMoreMessages).set(conversationId, hasMore)
       }));
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -169,7 +172,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       const res = await axiosInstance.get(`/messages/${conversationId}`, {
         params: { page: currentPage + 1, limit: 10 },
       });
-      console.log(currentPage)
       const { messages, hasMore } = res.data;
       if (messages.length) {
         set((state) => ({
@@ -187,9 +189,16 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   }, 
   sendMessage: async (messageData) => {
     const { selectedUser } = get();
+    const conversationId = messageData.conversationId;
+    if (!selectedUser?._id || !conversationId) return;
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser?._id}`, messageData);
-      set({ messages: res.data.messages });
+      set(() => {
+        return {
+          messages: res.data.messages,
+          // cachedMessages: new Map(state.cachedMessages).set(conversationId, res.data.messages),
+        };
+      });
     } catch (error) {
       if (axios.isAxiosError(error)) {
         // Narrowing the type of error to AxiosError
@@ -204,6 +213,13 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   subscribeToMessages: () => {
     const { selectedUser, messages } = get()
     const socket = useAuthStore.getState().socket
+  
+    if (!socket) {
+      console.log("[Socket] No socket connection found");
+      return;
+    }
+    console.log("[Socket] Subscribing to messages...");
+
     if (!selectedUser) return
     socket?.on("newMessage", (newMessage) => {
       const isMessageSentFromSelectedUser = newMessage.senderId !== selectedUser._id
@@ -248,5 +264,5 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     } finally {
       set({ isGeneratingAIResponse: false })
     }
-  }
+  },
 })) 
