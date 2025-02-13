@@ -30,6 +30,7 @@ interface UseMessageStoreProps {
   cachedMessages: Map<string, MessagesProps[]>;
   cachedHasMoreMessages: Map<string, boolean>;
   cachedConversation: Map<string, ConversationProps | null>;
+  cachedUsers: Map<string, AuthUser[] | []>
   resetMessages: () => void;
   getUsers: () => Promise<void>;
   getConversation: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
@@ -65,11 +66,26 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   cachedMessages: new Map(),
   cachedHasMoreMessages: new Map(),
   cachedConversation: new Map(),
+  cachedUsers: new Map(),
   getUsers: async () => {
+    const userId = useAuthStore.getState().authUser?._id
+    if (!userId) return
+
+    const { cachedUsers } = get()
+    const cachedUsersResponse = cachedUsers.get(userId)
+
+    if (cachedUsersResponse) {
+      set({ users: cachedUsersResponse })
+      return
+    }
+
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
-      set({ users: res.data });
+      set((state) => ({ 
+        users: res.data,
+        cachedUsers: new Map(state.cachedUsers).set(userId, res.data)
+      }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
       // Narrowing the type of error to AxiosError
@@ -103,7 +119,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       if (conversation) {
         set((state) => ({ 
           conversation,
-          selectedUser,
           validConversationId: true,
           cachedConversation: new Map(state.cachedConversation).set(selectedUser._id, conversation)
         }))
