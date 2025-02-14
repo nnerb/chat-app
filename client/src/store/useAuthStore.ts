@@ -12,6 +12,8 @@ export interface AuthUser {
   email: string;
   profilePic: string;
   createdAt: string;
+  lastLogin: string;
+  lastSeen: Date;
 }
 
 interface AuthState {
@@ -32,7 +34,7 @@ interface AuthState {
   disconnectSocket: () => void;
 }
 
-const BASE_URL = "http://localhost:5001"
+export const BASE_URL = "http://localhost:5001"
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   authUser: null,
@@ -80,7 +82,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   logout: async () => {
     try {
-      await axiosInstance.post("/auth/logout")
+      const { authUser } = get()
+      await axiosInstance.post(`/auth/logout/${authUser?._id}`)
       set({ authUser: null })
       get().disconnectSocket()
     } catch (error) {

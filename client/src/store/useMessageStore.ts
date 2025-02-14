@@ -28,9 +28,9 @@ interface UseMessageStoreProps {
   selectedMessageId: string | null;
   cachedAIResponses: Map<string, string[]>;
   cachedMessages: Map<string, MessagesProps[]>;
-  cachedHasMoreMessages: Map<string, boolean>;
   cachedConversation: Map<string, ConversationProps | null>;
   cachedUsers: Map<string, IUserSidebar[] | []>
+  isSubscribed: boolean;
   resetMessages: () => void;
   getUsers: () => Promise<void>;
   getConversation: (selectedUser: IUserSidebar | null, navigate: (path: string) => void) => Promise<void>;
@@ -64,20 +64,12 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   selectedMessageId: null,
   cachedAIResponses: new Map(),
   cachedMessages: new Map(),
-  cachedHasMoreMessages: new Map(),
   cachedConversation: new Map(),
   cachedUsers: new Map(),
+  isSubscribed: false,
   getUsers: async () => {
     const userId = useAuthStore.getState().authUser?._id
     if (!userId) return
-
-    const { cachedUsers } = get()
-    const cachedUsersResponse = cachedUsers.get(userId)
-
-    if (cachedUsersResponse) {
-      set({ users: cachedUsersResponse })
-      return
-    }
 
     set({ isUsersLoading: true });
     try {
@@ -138,25 +130,12 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     }
   },
   getMessages: async (conversationId) => {
-    // const { cachedMessages, cachedHasMoreMessages, selectedUser } = get();
-
-    // const cachedMessagesResponse =  cachedMessages.get(conversationId)
-    // const cachedHasMoreMessagesResponse = cachedHasMoreMessages.get(conversationId)
-    
-    // if (cachedMessagesResponse) {
-    //   set({
-    //     messages: cachedMessagesResponse,
-    //     hasMoreMessages: cachedHasMoreMessagesResponse,
-    //     currentPage: 1,
-    //     selectedUser
-    //   })
-    //   return;
-    // }
+  
     set({ isMessagesLoading : true });
     try {
       const res = await axiosInstance.get(`/messages/${conversationId}`);
       const { hasMore, currentPage, messages, selectedUser, conversation } = res.data
-      set(() => ({ 
+      set({ 
         messages, 
         selectedUser, 
         conversation,
@@ -165,7 +144,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         currentPage,
         // cachedMessages: new Map(state.cachedMessages).set(conversationId, messages),
         // cachedHasMoreMessages: new Map(state.cachedHasMoreMessages).set(conversationId, hasMore)
-      }));
+      });
     } catch (error) {
       if (axios.isAxiosError(error)) {
         // Narrowing the type of error to AxiosError
@@ -188,13 +167,11 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         params: { page: currentPage + 1, limit: 10 },
       });
       const { messages, hasMore } = res.data;
-      if (messages.length) {
-        set((state) => ({
-          messages: [...messages, ...state.messages],
-          currentPage: currentPage + 1,
-          hasMoreMessages: hasMore
-        }));
-      }
+      set((state) => ({
+        messages: [...messages, ...state.messages],
+        currentPage: currentPage + 1,
+        hasMoreMessages: hasMore
+      }));
     } catch (error) {
       console.error("Failed to fetch more messages:", error);
       toast.error("Failed to load older messages.");
@@ -205,15 +182,30 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   sendMessage: async (messageData) => {
     const { selectedUser } = get();
     const conversationId = messageData.conversationId;
-    if (!selectedUser?._id || !conversationId) return;
+    const userId = useAuthStore.getState().authUser?._id;
+    if (!selectedUser?._id || !conversationId || !userId) return;
+
+    // Optimistically update the sidebar for the sender
+    set((state) => ({
+      users: state.users.map((user) => {
+        if (user.conversationId === conversationId) {
+          return {
+            ...user,
+            lastMessage: {
+              content: messageData.text || "[Image]",
+              sender: userId,
+              timestamp: new Date().toISOString(),
+            },
+          };
+        }
+        return user;
+      }),
+    }));
+
     try {
-      const res = await axiosInstance.post(`/messages/send/${selectedUser?._id}`, messageData);
-      set(() => {
-        return {
-          messages: res.data.messages,
-          // cachedMessages: new Map(state.cachedMessages).set(conversationId, res.data.messages),
-        };
-      });
+      const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
+      const { messages } = res.data
+      set(({ messages }));
     } catch (error) {
       if (axios.isAxiosError(error)) {
         // Narrowing the type of error to AxiosError
@@ -226,25 +218,45 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     }
   },
   subscribeToMessages: () => {
-    const { selectedUser, messages } = get()
-    const socket = useAuthStore.getState().socket
-  
+    const socket = useAuthStore.getState().socket;
+    const { selectedUser } = get()
     if (!socket) {
       console.log("[Socket] No socket connection found");
       return;
     }
     console.log("[Socket] Subscribing to messages...");
+    socket?.on("newMessage", (newMessage: MessagesProps) => {
+      const userId = useAuthStore.getState().authUser?._id
+      const isMessageSentFromSelectedUser = newMessage.senderId._id !== selectedUser?._id
+      if (!userId || isMessageSentFromSelectedUser) return
+      set((state) => {
+        const updatedUsers = state.users.map((user) => {
+          if (user.conversationId === newMessage.conversationId) {
+            return {
+              ...user,
+              lastMessage: {
+                content: newMessage.text || "[Image]", // Handle image content if needed
+                sender: newMessage.senderId._id,
+                timestamp: newMessage.createdAt,
+              },
+            };
+          }
+          return user;  // Ensure all users are returned, not just the updated one
+        });
 
-    if (!selectedUser) return
-    socket?.on("newMessage", (newMessage) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId !== selectedUser._id
-      if (isMessageSentFromSelectedUser) return
-      set({ messages: [...messages, newMessage] })
-    })
+        return {
+          users: updatedUsers,  // Update cachedUsers map
+          messages: [...state.messages, newMessage],  // Add the new message to the messages array
+        };
+      });
+    });
+  
+    set({ isSubscribed: true });
   },
   unsubscribeToMessages: () => {
     const socket = useAuthStore.getState().socket
     socket?.off("newMessage")
+    set({ isSubscribed: false })
   },
   generateAIResponse: async (data, regenerate) => {
     const modal = document.getElementById("my_modal_2");     

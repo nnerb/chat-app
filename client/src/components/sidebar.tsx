@@ -6,6 +6,7 @@ import { useMessageStore } from "../store/useMessageStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useNavigate, useParams } from "react-router-dom";
 import { IUserSidebar } from "../store/types/message-types";
+import { formatRelativeTime } from "../lib/utils";
 
 const Sidebar = () => {
   const { 
@@ -15,7 +16,7 @@ const Sidebar = () => {
     getConversation, 
     isUsersLoading, 
   } = useMessageStore();
-  const { onlineUsers } = useAuthStore(); 
+  const { onlineUsers, authUser } = useAuthStore(); 
 
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const navigate = useNavigate()
@@ -35,7 +36,7 @@ const Sidebar = () => {
   const handleSelectUser = async(user: IUserSidebar) => {
     await getConversation(user, navigate)
   }
-
+  
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
@@ -87,12 +88,19 @@ const Sidebar = () => {
             </div>
 
             {/* User info - only visible on larger screens */}
-            <div className="hidden lg:flex lg:flex-col lg:items-start overflow-hidden">
+            <div className="hidden lg:flex lg:flex-col lg:items-start overflow-hidden w-full">
               <h2 className="font-medium truncate">{user.name}</h2>
               {/* {onlineUsers.includes(user._id) ? "Online" : "Offline"} */}
-              <p className="text-sm text-zinc-400 text-start truncate w-52">
-                {user.lastMessage?.content}
-              </p>
+              <div className="flex gap-1 w-full items-center">
+                <span className="text-sm text-zinc-400 text-start truncate">
+                  {user.lastMessage?.sender === authUser?._id && user.lastMessage?.content && "You: "}
+                  {user.lastMessage?.content || "Start a conversation"}
+                </span>
+                <p className="text-sm text-zinc-400 flex-shrink-0"> 
+                  {user.lastMessage?.timestamp && "• " }
+                  {formatRelativeTime(user.lastMessage?.timestamp || '')}
+                </p>
+              </div>
             </div>
           </button>
         ))}

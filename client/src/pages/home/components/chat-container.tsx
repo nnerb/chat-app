@@ -24,8 +24,7 @@ const ChatContainer = () => {
     }
     fetchMessages()
     return () => resetMessages()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[conversationId])
+  },[conversationId, resetMessages, getMessages])
 
   if (isMessagesLoading) {
     return (
