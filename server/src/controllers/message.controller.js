@@ -36,37 +36,33 @@ export const getUsersForSidebar = async(req, res) => {
    // Convert lastMessages to a map for quick lookup
    const lastMessageMap = new Map(lastMessages.map((msg) => [msg._id.toString(), msg.lastMessage]));
 
-   // Get participant user IDs (excluding the logged-in user)
-   const userIds = conversations
-     .flatMap((conv) => conv.participants)
-     .filter((id) => id.toString() !== loggedInUserId.toString());
+    // Step 5: Map all users and associate them with their last message if applicable
+    const usersWithLastMessage = filteredUsers.map((user) => {
+      // Check if the user is part of any conversation with the logged-in user
+      const conversation = conversations.find((conv) =>
+        conv.participants.includes(user._id)
+      );
 
-   // Fetch user details
-   const users = await User.find({ _id: { $in: userIds } }).lean();
+      // Get the last message for the conversation, if it exists
+      const lastMessageData = conversation ? lastMessageMap.get(conversation._id.toString()) : null;
 
-   // Map users with their last message in the conversation
-   const usersWithLastMessage = users.map((user) => {
-     const conversation = conversations.find((conv) =>
-       conv.participants.includes(user._id)
-     );
+      return {
+        _id: user._id,
+        name: user.fullName,
+        profilePicture: user.profilePic,
+        conversationId: conversation ? conversation._id : null,
+        lastMessage: lastMessageData
+          ? {
+              content: lastMessageData.text || "[Image]", // Show "[Image]" if the message contains an image
+              sender: lastMessageData.senderId,
+              timestamp: lastMessageData.createdAt,
+            }
+          : null,
+      };
+    });
 
-     const lastMessageData = lastMessageMap.get(conversation?._id.toString());
-
-     return {
-       _id: user._id,
-       name: user.fullName,
-       profilePicture: user.profilePic,
-       lastMessage: lastMessageData
-         ? {
-             content: lastMessageData.text || "[Image]", // Show [Image] if the message contains an image
-             sender: lastMessageData.senderId,
-             timestamp: lastMessageData.createdAt,
-           }
-         : null,
-     };
-   });
-
-   res.status(200).json(usersWithLastMessage);
+    // Step 6: Return the list of users with their last message data (if any)
+    res.status(200).json(usersWithLastMessage);
 
   } catch (error) {
     console.log("Error in getUsersForSidebar controller", error)
@@ -89,7 +85,7 @@ export const getMessages = async (req, res) => {
     }
 
     const conversation = await Conversation.findById(conversationId)
-    .populate("participants", "fullName profilePic");
+    .populate("participants", "fullName profilePic lastLogin lastSeen");
 
     if (!conversation) {
       console.log('Conversation not found')
@@ -139,16 +135,10 @@ export const sendMessage = async(req, res) => {
     const currentUserId = req.user._id
 
      // Find or create the conversation
-    let conversation = await Conversation.findOne({
+    const conversation = await Conversation.findOne({
       participants: { $all: [currentUserId, chatPartnerId] },
     });
 
-    if (!conversation) {
-      conversation = new Conversation({
-        participants: [currentUserId, chatPartnerId],
-      });
-      await conversation.save();
-    }
 
     let imageUrl;
 

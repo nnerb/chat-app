@@ -2,6 +2,7 @@ import cloudinary from "../lib/cloudinary.js"
 import { generateToken } from "../lib/utils.js"
 import User from "../models/user.model.js"
 import bcrypt from "bcryptjs"
+import { io } from "../socket.js"
 
 export const signup = async (req, res) => {
 
@@ -33,6 +34,7 @@ export const signup = async (req, res) => {
     })
 
     generateToken(newUser._id, res)
+    newUser.lastLogin = Date.now();
     await newUser.save()
     
     return res.status(201).json({
@@ -40,7 +42,8 @@ export const signup = async (req, res) => {
       fullName: newUser.fullName,
       email: newUser.email,
       profilePic: newUser.profilePic,
-      createdAt: newUser.createdAt
+      createdAt: newUser.createdAt,
+      lastLogin: newUser.lastLogin
     })
 
   } catch (error) {
@@ -66,13 +69,15 @@ export const login = async (req, res) => {
     }
 
     generateToken(user._id, res)
-
+    user.lastLogin = Date.now()
+    
     return res.status(200).json({
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
       profilePic: user.profilePic,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      lastLogin: user.lastLogin
     })
 
   } catch (error) {
@@ -81,8 +86,20 @@ export const login = async (req, res) => {
   }
 }
 
-export const logout = (req, res) => {
+export const logout = async (req, res) => {
+  const { id } = req.params
   try {
+    const user = await User.findById(id)
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid User ID' });
+    }
+
+    user.lastSeen = Date.now()
+    await user.save()
+
+     // Emit a WebSocket event to update the lastSeen timestamp in real-time
+     io.emit("userLoggedOut", { userId: id, lastSeen: user.lastSeen });
+    
     res.clearCookie('jwt', {
       httpOnly: true,
       sameSite: 'strict',

@@ -21,25 +21,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
-  // AI Preferences for Chat Customization
-  aiPreferences: {
-    chatStyle: {
-      type: [String],
-      enum: ["Casual", "Funny", "Formal", "Friendly", "Serious"],
-    },
-    favoriteWords: {
-      type: [String], // Array to store frequently used words
-      default: [],
-    },
-    favoriteEmojis: {
-      type: [String], // Array to store frequently used emojis
-      default: [],
-    },
-    trained: {
-      type: Boolean, // If user has AI-trained preferences
-      default: false,
-    },
+  lastLogin: {
+    type: Date,
+    default: Date.now,
   },
+  lastSeen: {
+    type: Date,
+    default: Date.now()
+  }
 }, { timestamps: true })
 
 const User = mongoose.model("User", userSchema)

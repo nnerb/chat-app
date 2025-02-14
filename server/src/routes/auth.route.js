@@ -6,7 +6,7 @@ const router = express.Router()
 
 router.post("/signup", signup)
 router.post("/login", login)
-router.post("/logout", logout)
+router.post("/logout/:id", logout)
 router.put("/update-profile", protectRoute, updateProfile)
 router.put("/remove-profile", protectRoute, removeProfilePic)
 router.get("/check", protectRoute, checkAuth)
