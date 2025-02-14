@@ -4,7 +4,7 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { AuthUser, useAuthStore } from "./useAuthStore";
 import { AIGeneratedResponseProps, MessageDataProps } from "../types";
-import {  MessagesProps } from "./types/message-types";
+import {  IUserSidebar, MessagesProps } from "./types/message-types";
 import { ConversationProps, ConversationResponse } from "./types/conversation-types";
 
 interface UseMessageStoreProps {
@@ -12,7 +12,7 @@ interface UseMessageStoreProps {
   setText: (text: string) => void
   messages: MessagesProps[];
   setMessages: (messages: MessagesProps[]) => void
-  users: AuthUser[];
+  users: IUserSidebar[];
   selectedUser: AuthUser | null;
   isUsersLoading: boolean;
   isConversationLoading: boolean;
@@ -30,10 +30,10 @@ interface UseMessageStoreProps {
   cachedMessages: Map<string, MessagesProps[]>;
   cachedHasMoreMessages: Map<string, boolean>;
   cachedConversation: Map<string, ConversationProps | null>;
-  cachedUsers: Map<string, AuthUser[] | []>
+  cachedUsers: Map<string, IUserSidebar[] | []>
   resetMessages: () => void;
   getUsers: () => Promise<void>;
-  getConversation: (selectedUser: AuthUser | null, navigate: (path: string) => void) => Promise<void>;
+  getConversation: (selectedUser: IUserSidebar | null, navigate: (path: string) => void) => Promise<void>;
   fetchMoreMessages: (conversationId: string, currentPage: number) => Promise<void>
   getMessages: (conversationId: string) => Promise<void>;
   sendMessage: (messageData: MessageDataProps) => Promise<void>;
@@ -113,7 +113,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     set({ isConversationLoading: true });
     try {
       // Fetch or create conversation with the selected user
-      const res = await axiosInstance.get(`/conversation/${selectedUser?._id}`);
+      const res = await axiosInstance.get(`/conversation/${selectedUser._id}`);
       const { conversation }  = res.data as ConversationResponse
 
       if (conversation) {

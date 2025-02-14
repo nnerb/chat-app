@@ -14,6 +14,8 @@ const MessageContent = () => {
     fetchMoreMessages,
     currentPage,
     selectedUser,
+    subscribeToMessages,
+    unsubscribeToMessages
   } = useMessageStore()
   const { authUser } = useAuthStore();
   const messageEndRef = useRef<HTMLDivElement>(null)
@@ -41,7 +43,13 @@ const MessageContent = () => {
       if (messageEndRef.current && messages) {
         messageEndRef.current.scrollIntoView(); 
       }
-    }, [messages]);
+      console.log("[ChatPage] Subscribing to messages...");
+      subscribeToMessages();
+      return () => {
+        console.log("[ChatPage] Unsubscribing from messages...");
+        unsubscribeToMessages();
+      };
+    }, [messages, subscribeToMessages, unsubscribeToMessages]);
   
 
   return ( 

@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { Users } from "lucide-react";
 import SidebarSkeleton from "./skeletons/sidebar-skeleton";
 import { useMessageStore } from "../store/useMessageStore";
-import { AuthUser, useAuthStore } from "../store/useAuthStore";
+import { useAuthStore } from "../store/useAuthStore";
 import { useNavigate, useParams } from "react-router-dom";
+import { IUserSidebar } from "../store/types/message-types";
 
 const Sidebar = () => {
   const { 
@@ -31,7 +32,7 @@ const Sidebar = () => {
     ? users.filter((user) => onlineUsers.includes(user._id))
     : users;
 
-  const handleSelectUser = async(user: AuthUser) => {
+  const handleSelectUser = async(user: IUserSidebar) => {
     await getConversation(user, navigate)
   }
 
@@ -71,10 +72,10 @@ const Sidebar = () => {
             `}
             disabled={selectedUser?._id === user._id && !!conversationId}
           >
-            <div className="relative mx-auto lg:mx-0">
+            <div className="relative mx-auto lg:mx-0 flex-shrink-0">
               <img
-                src={user.profilePic || "/avatar.png"}
-                alt={user.fullName}
+                src={user.profilePicture || "/avatar.png"}
+                alt={user.name}
                 className="size-12 object-cover rounded-full"
               />
               {onlineUsers.includes(user._id) && (
@@ -86,11 +87,12 @@ const Sidebar = () => {
             </div>
 
             {/* User info - only visible on larger screens */}
-            <div className="hidden lg:block text-left min-w-0">
-              <div className="font-medium truncate">{user.fullName}</div>
-              <div className="text-sm text-zinc-400">
-                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
-              </div>
+            <div className="hidden lg:flex lg:flex-col lg:items-start overflow-hidden">
+              <h2 className="font-medium truncate">{user.name}</h2>
+              {/* {onlineUsers.includes(user._id) ? "Online" : "Offline"} */}
+              <p className="text-sm text-zinc-400 text-start truncate w-52">
+                {user.lastMessage?.content}
+              </p>
             </div>
           </button>
         ))}

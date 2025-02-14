@@ -13,8 +13,6 @@ const ChatContainer = () => {
     getMessages,
     isMessagesLoading,
     resetMessages,
-    subscribeToMessages,
-    unsubscribeToMessages
   } = useMessageStore()
 
   const { conversationId } = useParams()
@@ -28,15 +26,6 @@ const ChatContainer = () => {
     return () => resetMessages()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[conversationId])
-
-  useEffect(() => {
-    console.log("[ChatPage] Subscribing to messages...");
-    subscribeToMessages();
-    return () => {
-      console.log("[ChatPage] Unsubscribing from messages...");
-      unsubscribeToMessages();
-    };
-  },[subscribeToMessages, unsubscribeToMessages])
 
   if (isMessagesLoading) {
     return (

@@ -5,12 +5,69 @@ import Message from "../models/message.model.js"
 import User from "../models/user.model.js"
 import { getReceiverSocketId, io } from "../socket.js"
 import OpenAi from "openai"
+import { Messages } from "openai/resources/beta/threads/messages.mjs"
 
 export const getUsersForSidebar = async(req, res) => {
   try {
     const loggedInUserId = req.user._id
     const filteredUsers = await User.find({_id: { $ne: loggedInUserId }})
-    res.status(200).json(filteredUsers)
+    const conversations = await Conversation.find({ participants: loggedInUserId })
+    const conversationIds = conversations.map((conversation) => conversation._id)
+
+     // Fetch the last message for each conversation
+     const lastMessages = await Message.aggregate([
+      { $match: { conversationId: { $in: conversationIds } } },
+      { $sort: { createdAt: -1 } }, // Sort messages by newest first
+      {
+        $group: {
+          _id: "$conversationId",
+          lastMessage: { 
+            $first: { 
+              text: "$text", 
+              image: "$image", 
+              senderId: "$senderId", 
+              createdAt: "$createdAt" 
+            } 
+          }
+        },
+      },
+    ]);
+
+   // Convert lastMessages to a map for quick lookup
+   const lastMessageMap = new Map(lastMessages.map((msg) => [msg._id.toString(), msg.lastMessage]));
+
+   // Get participant user IDs (excluding the logged-in user)
+   const userIds = conversations
+     .flatMap((conv) => conv.participants)
+     .filter((id) => id.toString() !== loggedInUserId.toString());
+
+   // Fetch user details
+   const users = await User.find({ _id: { $in: userIds } }).lean();
+
+   // Map users with their last message in the conversation
+   const usersWithLastMessage = users.map((user) => {
+     const conversation = conversations.find((conv) =>
+       conv.participants.includes(user._id)
+     );
+
+     const lastMessageData = lastMessageMap.get(conversation?._id.toString());
+
+     return {
+       _id: user._id,
+       name: user.fullName,
+       profilePicture: user.profilePic,
+       lastMessage: lastMessageData
+         ? {
+             content: lastMessageData.text || "[Image]", // Show [Image] if the message contains an image
+             sender: lastMessageData.senderId,
+             timestamp: lastMessageData.createdAt,
+           }
+         : null,
+     };
+   });
+
+   res.status(200).json(usersWithLastMessage);
+
   } catch (error) {
     console.log("Error in getUsersForSidebar controller", error)
     res.status(500).json({ success: false, message: "Internal server error" })
@@ -115,8 +172,6 @@ export const sendMessage = async(req, res) => {
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage)
     }
-
-    io.to(receiverSocketId).emit("updateConversations", { chatPartnerId: currentUserId, newMessage })
 
     const messages = await Message.find({ conversationId: conversation._id })
     .populate("senderId", "fullName profilePic")
