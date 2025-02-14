@@ -20,6 +20,6 @@ export interface IUserSidebar {
 interface ILastMessage {
   content: string;
   sender: string;
-  timestamp: string;
+  timestamp: Date;
 }
 

@@ -98,7 +98,7 @@ const Sidebar = () => {
                 </span>
                 <p className="text-sm text-zinc-400 flex-shrink-0"> 
                   {user.lastMessage?.timestamp && "• " }
-                  {formatRelativeTime(user.lastMessage?.timestamp || '')}
+                  {formatRelativeTime(user.lastMessage?.timestamp ?? new Date())}
                 </p>
               </div>
             </div>
