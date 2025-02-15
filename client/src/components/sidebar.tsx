@@ -15,6 +15,8 @@ const Sidebar = () => {
     users, 
     getConversation, 
     isUsersLoading, 
+    subscribeToLastMessage,
+    unsubscribeToLastMessage,
   } = useMessageStore();
   const { onlineUsers, authUser } = useAuthStore(); 
 
@@ -27,7 +29,13 @@ const Sidebar = () => {
       await getUsers()
     }
     fetchUsers()
-  }, [getUsers]);
+    console.log("[Sidebar] Subscribing to last message...");
+    subscribeToLastMessage()
+    return () => {
+      console.log("[Sidebar] Unsubscribing to last message...");
+      unsubscribeToLastMessage()
+    }
+  }, [getUsers, subscribeToLastMessage, unsubscribeToLastMessage]);
 
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
@@ -98,7 +106,7 @@ const Sidebar = () => {
                 </span>
                 <p className="text-sm text-zinc-400 flex-shrink-0"> 
                   {user.lastMessage?.timestamp && "• " }
-                  {formatRelativeTime(user.lastMessage?.timestamp ?? new Date())}
+                  {user.lastMessage && formatRelativeTime(user.lastMessage?.timestamp ?? new Date().toISOString())}
                 </p>
               </div>
             </div>

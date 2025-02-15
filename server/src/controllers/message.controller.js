@@ -85,7 +85,7 @@ export const getMessages = async (req, res) => {
     }
 
     const conversation = await Conversation.findById(conversationId)
-    .populate("participants", "fullName profilePic lastLogin lastSeen");
+    .populate("participants", "fullName profilePic lastSeen");
 
     if (!conversation) {
       console.log('Conversation not found')
@@ -95,9 +95,7 @@ export const getMessages = async (req, res) => {
       });
     }
   
-
     const messages = await Message.find({ conversationId: conversation._id })
-    .populate("senderId", "fullName profilePic")
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
@@ -161,14 +159,17 @@ export const sendMessage = async(req, res) => {
     const receiverSocketId = getReceiverSocketId(chatPartnerId)
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage)
+      io.to(receiverSocketId).emit("lastMessage", newMessage)
     }
 
     const messages = await Message.find({ conversationId: conversation._id })
-    .populate("senderId", "fullName profilePic")
     .sort({ createdAt: -1 })
     .limit(10)
 
     messages.reverse()
+
+    console.log({ messages })
+    console.log({ messages })
 
     res.status(201).json({ newMessage, messages })
 

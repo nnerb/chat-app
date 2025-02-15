@@ -1,12 +1,11 @@
-import { AuthUser } from "../useAuthStore";
-
 export interface MessagesProps {
  _id: string;
  conversationId: string;
- senderId: AuthUser;
- createdAt: string;
- image: string;
+ senderId: string;
+ receiverId: string;
  text: string; 
+ image: string;
+ createdAt: string;
 }
 
 export interface IUserSidebar {
@@ -20,6 +19,5 @@ export interface IUserSidebar {
 interface ILastMessage {
   content: string;
   sender: string;
-  timestamp: Date;
+  timestamp: string;
 }
-

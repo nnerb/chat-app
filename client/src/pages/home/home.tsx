@@ -6,7 +6,7 @@ import { useEffect } from "react";
 
 const HomePage = () => {
   const { conversationId } = useParams(); 
-  const { getMessages, validConversationId, subscribeToMessages, unsubscribeToMessages } = useMessageStore()
+  const { getMessages, validConversationId } = useMessageStore()
 
   useEffect(() => {
     const fetchConversation = async () => {
@@ -16,15 +16,6 @@ const HomePage = () => {
     }
     fetchConversation()
   }, [conversationId, validConversationId, getMessages]);
-
-  useEffect(() => {
-    console.log("[ChatPage] Subscribing to messages...");
-      subscribeToMessages();
-      return () => {
-        console.log("[ChatPage] Unsubscribing from messages...");
-        unsubscribeToMessages();
-      };
-  },[subscribeToMessages, unsubscribeToMessages])
 
   return (
     <div className="h-screen bg-base-200">

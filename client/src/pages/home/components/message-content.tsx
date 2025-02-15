@@ -14,6 +14,8 @@ const MessageContent = () => {
     fetchMoreMessages,
     currentPage,
     selectedUser,
+    subscribeToMessages,
+    unsubscribeToMessages
   } = useMessageStore()
   const { authUser } = useAuthStore();
   const messageEndRef = useRef<HTMLDivElement>(null)
@@ -41,7 +43,13 @@ const MessageContent = () => {
       if (messageEndRef.current && messages) {
         messageEndRef.current.scrollIntoView(); 
       }
-    }, [messages]);
+      console.log("[MessageContent] Subscribing to messages...");
+      subscribeToMessages()
+      return () => {
+        console.log("[MessageContent] Unsubscribing to messages...");
+        unsubscribeToMessages()
+      }
+    }, [messages, subscribeToMessages, unsubscribeToMessages]);
   
 
   return ( 
@@ -54,7 +62,7 @@ const MessageContent = () => {
       {messages.map((message, index) => (
         <div
           key={message._id}
-          className={`chat ${message.senderId._id === authUser?._id ? "chat-end" : "chat-start"}`}
+          className={`chat ${message.senderId === authUser?._id ? "chat-end" : "chat-start"}`}
           ref={index === 0 ? topMessageRef : messageEndRef} // Use refs only when needed
         >
           <IndividualChat message={message} selectedUser={selectedUser} />

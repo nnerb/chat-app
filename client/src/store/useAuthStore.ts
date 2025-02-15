@@ -12,8 +12,7 @@ export interface AuthUser {
   email: string;
   profilePic: string;
   createdAt: string;
-  lastLogin: string;
-  lastSeen: Date;
+  lastSeen: string;
 }
 
 interface AuthState {

@@ -8,7 +8,7 @@ import { io } from "socket.io-client";
 
 interface UserLoggedOutProps {
   userId: string;
-  lastSeen: Date;
+  lastSeen: string;
 }
 
 const ChatHeader = () => {

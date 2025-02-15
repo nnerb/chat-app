@@ -12,7 +12,7 @@ export const areUsersDifferent = (users1: AuthUser[], users2: AuthUser[]) => {
     return JSON.stringify(users1) !== JSON.stringify(users2);
 };
 
-export const formatRelativeTime = (timestamp: Date) => {
+export const formatRelativeTime = (timestamp: string) => {
   if (!timestamp) return "";
 
   const date = new Date(timestamp);  

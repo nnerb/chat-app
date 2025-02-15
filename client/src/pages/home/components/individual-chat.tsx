@@ -43,20 +43,20 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
         <div className="size-10 rounded-full border">
           <img
             src={
-              message.senderId._id === authUser?._id
+              message.senderId === authUser?._id
                 ? authUser?.profilePic || "/avatar.png"
                 : selectedUser?.profilePic || "/avatar.png"
             }
             alt="profile pic"
           />
-          {message.senderId._id === authUser?._id && (
+          {message.senderId === authUser?._id && (
             <span
               className="absolute bottom-0 right-0 size-3 bg-green-500 
               rounded-full ring-2 ring-zinc-900"
             /> 
           )}
 
-          {(message.senderId._id !== authUser?._id) && onlineUsers.includes(selectedUser?._id || "") && (
+          {(message.senderId !== authUser?._id) && onlineUsers.includes(selectedUser?._id || "") && (
             <span
               className="absolute bottom-0 right-0 size-3 bg-green-500 
               rounded-full ring-2 ring-zinc-900"
@@ -70,12 +70,12 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
         </time>
       </div>
       <div 
-        className={`chat w-full ${message.senderId._id === authUser?._id 
+        className={`chat w-full ${message.senderId === authUser?._id 
         ? "chat-end" : "chat-start flex items-center gap-1"} group`}
       >
         <div 
           className={`chat-bubble flex flex-col
-          ${message.senderId._id === authUser?._id 
+          ${message.senderId === authUser?._id 
           ? 'bg-primary text-primary-content' 
           : "bg-base-200 text-base-content"}`}
         >
@@ -88,7 +88,7 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
           )}
           {message.text && <p className="w-full">{message.text}</p>}
         </div>
-        {message.senderId._id !== authUser?._id && 
+        {message.senderId !== authUser?._id && 
           <div className="dropdown dropdown-top dropdown-left w-3">
             <EllipsisVertical 
               tabIndex={0} 

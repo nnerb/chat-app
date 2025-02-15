@@ -23,7 +23,9 @@ const ChatContainer = () => {
       await getMessages(conversationId)
     }
     fetchMessages()
-    return () => resetMessages()
+    return () => {
+      resetMessages()
+    }
   },[conversationId, resetMessages, getMessages])
 
   if (isMessagesLoading) {

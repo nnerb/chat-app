@@ -39,6 +39,8 @@ interface UseMessageStoreProps {
   sendMessage: (messageData: MessageDataProps) => Promise<void>;
   subscribeToMessages: () => void;
   unsubscribeToMessages: () => void;
+  subscribeToLastMessage: () => void;
+  unsubscribeToLastMessage: () => void;
   generateAIResponse: (data: AIGeneratedResponseProps, regenerate?: boolean) => Promise<void>
 }
 
@@ -194,7 +196,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
             lastMessage: {
               content: messageData.text || "[Image]",
               sender: userId,
-              timestamp: new Date().toISOString(),
+              timestamp: new Date().toISOString()
             },
           };
         }
@@ -227,8 +229,27 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     console.log("[Socket] Subscribing to messages...");
     socket?.on("newMessage", (newMessage: MessagesProps) => {
       const userId = useAuthStore.getState().authUser?._id
-      const isMessageSentFromSelectedUser = newMessage.senderId._id !== selectedUser?._id
+      const isMessageSentFromSelectedUser = newMessage.senderId !== selectedUser?._id
       if (!userId || isMessageSentFromSelectedUser) return
+      set((state) => {
+        return {
+          messages: [...state.messages, newMessage],  // Add the new message to the messages array
+        };
+      });
+    });
+  },
+  unsubscribeToMessages: () => {
+    const socket = useAuthStore.getState().socket
+    socket?.off("newMessage")
+  },
+  subscribeToLastMessage: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) {
+      console.log("[Socket] No socket connection found");
+      return;
+    }
+    console.log("[Socket] Subscribing to last message...");
+    socket?.on("lastMessage", (newMessage: MessagesProps) => {
       set((state) => {
         const updatedUsers = state.users.map((user) => {
           if (user.conversationId === newMessage.conversationId) {
@@ -236,7 +257,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
               ...user,
               lastMessage: {
                 content: newMessage.text || "[Image]", // Handle image content if needed
-                sender: newMessage.senderId._id,
+                sender: newMessage.senderId,
                 timestamp: newMessage.createdAt,
               },
             };
@@ -245,18 +266,14 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         });
 
         return {
-          users: updatedUsers,  // Update cachedUsers map
-          messages: [...state.messages, newMessage],  // Add the new message to the messages array
+          users: updatedUsers,  // Add the new message to the messages array
         };
       });
     });
-  
-    set({ isSubscribed: true });
   },
-  unsubscribeToMessages: () => {
+  unsubscribeToLastMessage: () => {
     const socket = useAuthStore.getState().socket
-    socket?.off("newMessage")
-    set({ isSubscribed: false })
+    socket?.off("lastMessage")
   },
   generateAIResponse: async (data, regenerate) => {
     const modal = document.getElementById("my_modal_2");     

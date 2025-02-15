@@ -34,7 +34,6 @@ export const signup = async (req, res) => {
     })
 
     generateToken(newUser._id, res)
-    newUser.lastLogin = Date.now();
     await newUser.save()
     
     return res.status(201).json({
@@ -43,7 +42,6 @@ export const signup = async (req, res) => {
       email: newUser.email,
       profilePic: newUser.profilePic,
       createdAt: newUser.createdAt,
-      lastLogin: newUser.lastLogin
     })
 
   } catch (error) {
@@ -69,7 +67,6 @@ export const login = async (req, res) => {
     }
 
     generateToken(user._id, res)
-    user.lastLogin = Date.now()
     
     return res.status(200).json({
       _id: user._id,
@@ -77,7 +74,6 @@ export const login = async (req, res) => {
       email: user.email,
       profilePic: user.profilePic,
       createdAt: user.createdAt,
-      lastLogin: user.lastLogin
     })
 
   } catch (error) {
