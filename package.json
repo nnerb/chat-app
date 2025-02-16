@@ -1,0 +1,21 @@
+{
+  "name": "chat-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build" : "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+    "start" : "npm run start --prefix server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nnerb/chat-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nnerb/chat-app/issues"
+  },
+  "homepage": "https://github.com/nnerb/chat-app#readme",
+  "description": ""
+}

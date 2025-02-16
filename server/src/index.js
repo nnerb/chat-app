@@ -6,6 +6,7 @@ import dotenv from "dotenv"
 import cookieParser from "cookie-parser"
 import cors from "cors"
 import { app, server } from "./socket.js"
+import path from "path"
 
 // Database connection function
 import { connectDB } from "./lib/db.js"
@@ -13,6 +14,7 @@ import { connectDB } from "./lib/db.js"
 dotenv.config()
 
 const PORT = process.env.PORT || 5001
+const __dirname = path.resolve()
 
 
 app.use(express.json({
@@ -27,6 +29,13 @@ app.use(cors({
 app.use("/api/auth", authRoutes)
 app.use("/api/conversation", conversationRoutes)
 app.use("/api/messages", messageRoutes)
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/dist")))
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client", "dist", "index.html"))
+  })
+}
 
 
 server.listen(PORT, () => {
