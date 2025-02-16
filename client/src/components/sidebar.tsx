@@ -53,14 +53,14 @@ const Sidebar = () => {
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
-    <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200 z-0">
+    <aside className="h-full w-20 xl:w-72 border-r border-base-300 flex flex-col transition-all duration-200 z-0">
       <div className="border-b border-base-300 w-full p-5">
-        <div className="flex items-center justify-center lg:justify-start gap-2">
+        <div className="flex items-center justify-center xl:justify-start gap-2">
           <Users className="size-6" />
-          <span className="font-medium hidden lg:block">Contacts</span>
+          <span className="font-medium hidden xl:block">Contacts</span>
         </div>
         {/* TODO: Online filter toggle */}
-        <div className="mt-3 hidden lg:flex items-center gap-2">
+        <div className="mt-3 hidden xl:flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
             <input
               type="checkbox"
@@ -86,7 +86,7 @@ const Sidebar = () => {
             `}
             disabled={selectedUser?._id === user._id && !!conversationId}
           >
-            <div className="relative mx-auto lg:mx-0 flex-shrink-0">
+            <div className="relative mx-auto xl:mx-0 flex-shrink-0">
               <img
                 src={user.profilePicture || "/avatar.png"}
                 alt={user.name}
@@ -101,7 +101,7 @@ const Sidebar = () => {
             </div>
 
             {/* User info - only visible on larger screens */}
-            <div className="hidden lg:flex lg:flex-col lg:items-start overflow-hidden w-full">
+            <div className="hidden xl:flex xl:flex-col xl:items-start overflow-hidden w-full">
               <h2 className="font-medium truncate">{user.name}</h2>
               {/* {onlineUsers.includes(user._id) ? "Online" : "Offline"} */}
               <div className="flex gap-1 w-full items-center">

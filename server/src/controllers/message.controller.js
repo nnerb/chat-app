@@ -59,8 +59,6 @@ export const getUsersForSidebar = async(req, res) => {
           : null,
       };
     });
-
-    console.log(usersWithLastMessage)
     // Step 6: Return the list of users with their last message data (if any)
     res.status(200).json(usersWithLastMessage);
 
@@ -168,9 +166,6 @@ export const sendMessage = async(req, res) => {
 
     messages.reverse()
 
-    console.log({ messages })
-    console.log({ messages })
-
     res.status(201).json({ newMessage, messages })
 
   } catch (error) {
@@ -236,8 +231,6 @@ export const generateReply = async (req, res) => {
     const recipient = conversation.participants.find(
       (participant) => participant._id.toString() !== currentUserId.toString()
     );
-
-    console.log(conversation)
 
     if (!recipient) {
       return res.status(404).json({ success: false, message: "Recipient not found" });
