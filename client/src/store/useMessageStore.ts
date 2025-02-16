@@ -76,9 +76,9 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
-      set((state) => ({ 
+      set(({ 
         users: res.data,
-        cachedUsers: new Map(state.cachedUsers).set(userId, res.data)
+        // cachedUsers: new Map(state.cachedUsers).set(userId, res.data)
       }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -188,8 +188,8 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     if (!selectedUser?._id || !conversationId || !userId) return;
 
     // Optimistically update the sidebar for the sender
-    set((state) => ({
-      users: state.users.map((user) => {
+    set((state) => {
+      const updatedUsers = state.users.map((user) => {
         if (user.conversationId === conversationId) {
           return {
             ...user,
@@ -200,9 +200,15 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
             },
           };
         }
-        return user;
-      }),
-    }));
+          return user;
+        })
+      const sortedUsers = updatedUsers.sort((a, b) => {
+        const timeA = new Date(a.lastMessage?.timestamp || 0).getTime();
+        const timeB = new Date(b.lastMessage?.timestamp || 0).getTime();
+        return timeB - timeA; // Descending order (latest first)
+      });
+      return { users: sortedUsers }  
+    });
 
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
@@ -264,9 +270,13 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
           }
           return user;  // Ensure all users are returned, not just the updated one
         });
-
+        const sortedUsers = updatedUsers.sort((a, b) => {
+          const timeA = new Date(a.lastMessage?.timestamp || 0).getTime();
+          const timeB = new Date(b.lastMessage?.timestamp || 0).getTime();
+          return timeB - timeA; // Descending order (latest first)
+        });
         return {
-          users: updatedUsers,  // Add the new message to the messages array
+          users: sortedUsers,  // Add the new message to the messages array
         };
       });
     });

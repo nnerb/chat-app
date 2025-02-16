@@ -5,7 +5,6 @@ import Message from "../models/message.model.js"
 import User from "../models/user.model.js"
 import { getReceiverSocketId, io } from "../socket.js"
 import OpenAi from "openai"
-import { Messages } from "openai/resources/beta/threads/messages.mjs"
 
 export const getUsersForSidebar = async(req, res) => {
   try {
@@ -61,6 +60,7 @@ export const getUsersForSidebar = async(req, res) => {
       };
     });
 
+    console.log(usersWithLastMessage)
     // Step 6: Return the list of users with their last message data (if any)
     res.status(200).json(usersWithLastMessage);
 

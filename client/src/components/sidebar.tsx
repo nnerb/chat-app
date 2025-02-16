@@ -37,9 +37,14 @@ const Sidebar = () => {
     }
   }, [getUsers, subscribeToLastMessage, unsubscribeToLastMessage]);
 
-  const filteredUsers = showOnlineOnly
+  const filteredUsers = (showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+    : users
+  ).sort((a, b) => {
+    const timeA = a.lastMessage?.timestamp ? new Date(a.lastMessage.timestamp).getTime() : 0;
+    const timeB = b.lastMessage?.timestamp ? new Date(b.lastMessage.timestamp).getTime() : 0;
+    return timeB - timeA;
+  })
 
   const handleSelectUser = async(user: IUserSidebar) => {
     await getConversation(user, navigate)
