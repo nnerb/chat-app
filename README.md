@@ -8,7 +8,7 @@ Yapster is a **real-time chat application** built with **MERN, TypeScript, and S
 ✅ Online/offline user tracking 🟢🔴  
 
 🔗 **Live Demo:** [https://chat-app-vue8.onrender.com/]  
-📂 **GitHub Repo:** [Add Your Repo Link Here]  
+📂 **GitHub Repo:** [https://github.com/nnerb/chat-app]  
 
 ---
 
