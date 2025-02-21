@@ -55,6 +55,7 @@ Yapster is a **real-time chat application** built with **MERN, TypeScript, and S
 ![image](https://github.com/user-attachments/assets/23d96339-0502-407e-9e4e-29520800d107)
 ![image](https://github.com/user-attachments/assets/bdff4d38-6426-40f2-8a16-55f7664e4ead)
 ![image](https://github.com/user-attachments/assets/5b4a298a-12fb-40ea-a177-923fb6839911)
+![image](https://github.com/user-attachments/assets/110af312-7e21-41cd-a8fb-84e4a2962df1)
 
 ---
 
