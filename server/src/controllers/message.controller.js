@@ -186,9 +186,23 @@ export const generateReply = async (req, res) => {
       return res.status(400).json({ success: false, message: "Conversation ID is required" });
     }
 
-
     if (!selectedMessageId || !mongoose.Types.ObjectId.isValid(selectedMessageId)) {
       return res.status(400).json({ success: false, message: "Invalid selected message ID" });
+    }
+
+    const conversation = await Conversation.findById(conversationId)
+
+    if (!conversation) {
+      return res.status(400).json({ success: false, message: "Conversation not found" });
+    }
+    const aiGeneratedRepliesCount = conversation.aiGenerateRepliesCount.get(currentUserId.toString()) || 0;
+   
+    // Check AI reply limit for the current user
+    if (aiGeneratedRepliesCount >= 3) {
+      return res.status(403).json({
+        success: false,
+        message: "You've used all 3 AI replies for this conversation.",
+      });
     }
 
     // Fetch the selected message
@@ -217,15 +231,6 @@ export const generateReply = async (req, res) => {
     // Fetch user and conversation details
     const user = await User.findById(currentUserId);
     const { fullName } = user;
-   
-    const conversation = await Conversation.findById(conversationId).populate(
-      "participants",
-      "fullName profilePic"
-    );
-
-    if (!conversation) {
-      return res.status(400).json({ success: false, message: "Conversation not found" });
-    }
 
     // Identify the recipient
     const recipient = conversation.participants.find(
@@ -249,6 +254,9 @@ export const generateReply = async (req, res) => {
     - You are ${fullName} having a conversation with ${recipientName}. 
     - Your goal is to provide concise, relevant, and polite replies based on the conversation context.
     - Detect if sender normally starts the conversation with capital or small letter.
+    - Format response **exactly** like this:
+      ["Reply 1", "Reply 2", "Reply 3"]
+
      Conversation:
       ${formattedHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}
       Selected Message: ${selectedMessage.text}
@@ -262,16 +270,25 @@ export const generateReply = async (req, res) => {
       ...formattedHistory,
       { role: "user", content: selectedMessage.text }, // The selected message
     ],
-    n: 3,
-    max_tokens: 20,
-    temperature: 0.7
+    max_tokens: 100,
+    temperature: 0.9,
+    top_p: 0.8, // Nucleus sampling (more diverse responses)
+    frequency_penalty: 0.6, // Discourage repeated phrases
+    presence_penalty: 0.4 // Encourage new words/ideas
   });
 
-  // Extract the reply options (just the message content)
-  const replyOptions = response.choices.map((choice) => choice.message.content.trim());
+  // // Increment the AI reply count
+  await Conversation.updateOne(
+    { _id: conversationId },
+    { $inc: { [`aiGenerateRepliesCount.${currentUserId}`]: 1 } } 
+  );
 
+  // Extract and parse the reply options (just the message content)
+  const replyOptions = JSON.parse(response.choices[0].message.content);
+
+  const updatedAiGeneratedRepliesCount = aiGeneratedRepliesCount + 1;
   // Return the reply options as an array of strings
-  res.status(201).json({ replyOptions });
+  res.status(201).json({ replyOptions, updatedAiGeneratedRepliesCount });
   } catch (error) {
     console.log("Error in generateReply controller", error)
     res.status(500).json({ success: false, message: "Internal server error" })

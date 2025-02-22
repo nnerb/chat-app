@@ -25,6 +25,7 @@ interface UseMessageStoreProps {
   isFetchingMoreMessages: boolean;
   aiGeneratedResponse: string[] | null;
   isGeneratingAIResponse: boolean;
+  aiGeneratedRepliesCount: number;
   selectedMessageId: string | null;
   cachedAIResponses: Map<string, string[]>;
   cachedMessages: Map<string, MessagesProps[]>;
@@ -61,6 +62,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   currentPage: 1,
   hasMoreMessages: null,
   aiGeneratedResponse: null,
+  aiGeneratedRepliesCount: 0,
   isFetchingMoreMessages: false,
   isGeneratingAIResponse: false,
   selectedMessageId: null,
@@ -299,8 +301,10 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       }
 
       const res = await axiosInstance.post(`/messages/generate-reply`, data);
+      const { replyOptions, updatedAiGeneratedRepliesCount } = res.data
       set((state) => ({
-        aiGeneratedResponse: res.data.replyOptions,
+        aiGeneratedResponse: replyOptions,
+        aiGeneratedRepliesCount: updatedAiGeneratedRepliesCount,
         selectedMessageId: data.selectedMessageId,
         cachedAIResponses: new Map(state.cachedAIResponses).set(cacheKey, res.data.replyOptions),
       }));

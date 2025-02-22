@@ -1,12 +1,17 @@
 import mongoose from "mongoose";
 
 const conversationSchema = new mongoose.Schema({
- participants: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User"
+  participants: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }
+  ],
+  aiGenerateRepliesCount: {
+    type: Map,
+    of: Number,
+    default: {}
   }
-]
 }, { timestamps: true })
 
 const Conversation = mongoose.model("Conversation", conversationSchema)
