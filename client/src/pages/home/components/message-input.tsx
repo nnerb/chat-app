@@ -1,4 +1,4 @@
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMessageStore } from "../../../store/useMessageStore";
@@ -10,6 +10,7 @@ const MessageInput = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { sendMessage, text, setText, isMessagesLoading  } = useMessageStore()
   const { conversationId } = useParams();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,6 +50,33 @@ const MessageInput = () => {
     }
   };
 
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      // Reset height to calculate the correct scroll height
+      textareaRef.current.style.height = "auto";
+      // Set height to scroll height but cap at maximum (e.g., 120px)
+      const maxHeight = 120; // Adjust this value as needed
+      const newHeight = Math.min(textareaRef.current.scrollHeight, maxHeight);
+      textareaRef.current.style.height = `${newHeight}px`;
+      
+      // Show scrollbar ONLY when content exceeds max height
+      textareaRef.current.style.overflowY = 
+        textareaRef.current.scrollHeight > maxHeight ? "auto" : "hidden";
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [text]);
+
+const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    const form = e.currentTarget.form;
+    if (form) form.requestSubmit();
+  }
+};
+
   return (
     <div className="p-4 w-full">
       {imagePreview && (
@@ -74,14 +102,20 @@ const MessageInput = () => {
 
       <form onSubmit={handleSendMessage} className="flex items-center gap-2">
         <div className="flex-1 flex gap-2">
-          <input
-            type="text"
-            className="w-full input input-bordered rounded-lg input-sm sm:input-md disabled:input-disabled"
-            placeholder="Type a message..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            disabled={isMessagesLoading}
-          />
+        <textarea
+          ref={textareaRef}
+          className="
+            w-full textarea textarea-bordered rounded-lg textarea-sm sm:textarea-md disabled:textarea-disabled
+            resize-none min-h-[40px] max-h-32 overflow-y-auto
+          "
+          placeholder="Type a message..."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleKeyDown}  // <-- Add this
+          disabled={isMessagesLoading}
+          rows={1}
+        />
+
           <input
             type="file"
             accept="image/*"
