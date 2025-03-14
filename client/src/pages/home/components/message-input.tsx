@@ -1,16 +1,19 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import { Image, Send, X } from "lucide-react";
+import { Image, Send, Smile, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMessageStore } from "../../../store/useMessageStore";
 import { MessageDataProps } from "../../../types";
 import { useParams } from "react-router-dom";
+import EmojiPicker from "emoji-picker-react";
 
 const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState<string | ArrayBuffer | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { sendMessage, text, setText, isMessagesLoading  } = useMessageStore()
+  const { sendMessage, text, setText, isMessagesLoading } = useMessageStore();
   const { conversationId } = useParams();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const maxHeight = 120;
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,15 +55,10 @@ const MessageInput = () => {
 
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
-      // Reset height to calculate the correct scroll height
       textareaRef.current.style.height = "auto";
-      // Set height to scroll height but cap at maximum (e.g., 120px)
-      const maxHeight = 120; // Adjust this value as needed
       const newHeight = Math.min(textareaRef.current.scrollHeight, maxHeight);
       textareaRef.current.style.height = `${newHeight}px`;
-      
-      // Show scrollbar ONLY when content exceeds max height
-      textareaRef.current.style.overflowY = 
+      textareaRef.current.style.overflowY =
         textareaRef.current.scrollHeight > maxHeight ? "auto" : "hidden";
     }
   };
@@ -69,16 +67,20 @@ const MessageInput = () => {
     adjustTextareaHeight();
   }, [text]);
 
-const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    const form = e.currentTarget.form;
-    if (form) form.requestSubmit();
-  }
-};
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const form = e.currentTarget.form;
+      if (form) form.requestSubmit();
+    }
+  };
+
+  const handleEmojiClick = (emojiObject: { emoji: string }) => {
+    setText((prevText) => prevText + emojiObject.emoji)
+  };
 
   return (
-    <div className="p-4 w-full">
+    <div className="p-4 w-full relative">
       {imagePreview && (
         <div className="mb-3 flex items-center gap-2">
           <div className="relative">
@@ -90,7 +92,7 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
             <button
               disabled={isMessagesLoading}
               onClick={removeImage}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300
+              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300 
               flex items-center justify-center disabled:btn-disabled"
               type="button"
             >
@@ -101,21 +103,32 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       )}
 
       <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-        <div className="flex-1 flex gap-2">
-        <textarea
-          ref={textareaRef}
-          className="
-            w-full textarea textarea-bordered rounded-lg textarea-sm sm:textarea-md disabled:textarea-disabled
-            resize-none min-h-[40px] max-h-32 overflow-y-auto
-          "
-          placeholder="Type a message..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}  // <-- Add this
-          disabled={isMessagesLoading}
-          rows={1}
-        />
-
+        <div className="flex-1 flex gap-2 relative">
+          <textarea
+            ref={textareaRef}
+            className="w-full textarea textarea-bordered rounded-lg textarea-sm sm:textarea-md 
+            disabled:textarea-disabled resize-none !pr-9"
+            placeholder="Type a message..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isMessagesLoading}
+            rows={1}
+          />
+          {/* Emoji Dropdown */}
+          <div 
+            className={`
+              dropdown dropdown-left dropdown-top absolute
+              top-0 right-0  translate-y-[0.80rem] hidden sm:block cursor-pointer
+              ${ textareaRef.current && textareaRef.current.scrollHeight > maxHeight 
+                ? "-translate-x-20" : "-translate-x-16" 
+              }
+            `}
+            tabIndex={0}
+          >
+            <Smile />
+            <EmojiPicker onEmojiClick={handleEmojiClick} className="dropdown-content"/>
+          </div>
           <input
             type="file"
             accept="image/*"
@@ -127,7 +140,7 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 
           <button
             type="button"
-            className={`hidden sm:flex btn btn-circle disabled:btn-disabled
+            className={`flex btn btn-circle disabled:btn-disabled 
                      ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
             onClick={() => fileInputRef.current?.click()}
             disabled={isMessagesLoading}

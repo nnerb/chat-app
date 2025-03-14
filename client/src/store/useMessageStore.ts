@@ -9,7 +9,7 @@ import { ConversationProps, ConversationResponse } from "./types/conversation-ty
 
 interface UseMessageStoreProps {
   text: string;
-  setText: (text: string) => void
+  setText:  (text: string | ((prevText: string) => string)) => void;
   messages: MessagesProps[];
   setMessages: (messages: MessagesProps[]) => void
   users: IUserSidebar[];
@@ -47,7 +47,7 @@ interface UseMessageStoreProps {
 
 export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   text: "",
-  setText: (text) => set({ text }),
+  setText: (text) => set((state) => ({ text: typeof text === "function" ? text(state.text) : text })),
   messages: [],
   setMessages: (messages) => set({ messages }),
   resetMessages: () => set({ messages: [], selectedUser: null }),
