@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { useMessageStore } from "../../../store/useMessageStore";
 import { MessageDataProps } from "../../../types";
 import { useParams } from "react-router-dom";
-import EmojiPicker from "emoji-picker-react";
+import EmojiPicker, { Theme } from "emoji-picker-react";
 
 const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState<string | ArrayBuffer | null>(null);
@@ -106,8 +106,8 @@ const MessageInput = () => {
         <div className="flex-1 flex gap-2 relative">
           <textarea
             ref={textareaRef}
-            className="w-full textarea textarea-bordered rounded-lg textarea-sm sm:textarea-md 
-            disabled:textarea-disabled resize-none !pr-9"
+            className="w-full textarea rounded-lg textarea-sm sm:textarea-md 
+            disabled: resize-none !pr-9 min-h-10"
             placeholder="Type a message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -119,7 +119,7 @@ const MessageInput = () => {
           <div 
             className={`
               dropdown dropdown-left dropdown-top absolute
-              top-0 right-0  translate-y-[0.80rem] hidden sm:block cursor-pointer
+              top-0 right-0  translate-y-2 hidden sm:block cursor-pointer
               ${ textareaRef.current && textareaRef.current.scrollHeight > maxHeight 
                 ? "-translate-x-20" : "-translate-x-16" 
               }
@@ -127,7 +127,9 @@ const MessageInput = () => {
             tabIndex={0}
           >
             <Smile />
-            <EmojiPicker onEmojiClick={handleEmojiClick} className="dropdown-content"/>
+            <div className="dropdown-content">
+              <EmojiPicker onEmojiClick={handleEmojiClick} theme={Theme.AUTO}  />
+            </div>
           </div>
           <input
             type="file"
