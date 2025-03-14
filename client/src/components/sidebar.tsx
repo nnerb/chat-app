@@ -86,7 +86,7 @@ const Sidebar = () => {
             `}
             disabled={selectedUser?._id === user._id && !!conversationId}
           >
-            <div className="relative mx-auto xl:mx-0 flex-shrink-0">
+            <div className="relative mx-auto xl:mx-0 shrink-0">
               <img
                 src={user.profilePicture || "/avatar.png"}
                 alt={user.name}
@@ -109,7 +109,7 @@ const Sidebar = () => {
                   {user.lastMessage?.sender === authUser?._id && user.lastMessage?.content && "You: "}
                   {user.lastMessage?.content || "Start a conversation"}
                 </span>
-                <p className="text-sm text-zinc-400 flex-shrink-0"> 
+                <p className="text-sm text-zinc-400 shrink-0"> 
                   {user.lastMessage?.timestamp && "• " }
                   {user.lastMessage && formatRelativeTime(user.lastMessage?.timestamp ?? new Date().toISOString())}
                 </p>

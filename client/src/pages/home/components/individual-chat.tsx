@@ -94,7 +94,7 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
           <ul 
             tabIndex={0} 
             className="
-              dropdown-content menu bg-base-100 rounded-box z-[100] w-40 translate-x-10 mr-3 shadow 
+              dropdown-content menu bg-base-100 rounded-box z-100 w-40 translate-x-10 mr-3 shadow 
               md:translate-x-32"
           >
             <li>

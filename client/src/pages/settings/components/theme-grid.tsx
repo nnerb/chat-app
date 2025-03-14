@@ -18,10 +18,10 @@ const ThemeGrid = () => {
         >
           <div className="relative w-full rounded-md" data-theme={t}>
             <div className="flex justify-center gap-px p-1 items-center">
-              <div className="rounded bg-primary size-7 w-full"></div>
-              <div className="rounded bg-secondary size-7 w-full"></div>
-              <div className="rounded bg-accent size-7 w-full"></div>
-              <div className="rounded bg-neutral size-7 w-full"></div>
+              <div className="rounded-sm bg-primary size-7 w-full"></div>
+              <div className="rounded-sm bg-secondary size-7 w-full"></div>
+              <div className="rounded-sm bg-accent size-7 w-full"></div>
+              <div className="rounded-sm bg-neutral size-7 w-full"></div>
             </div>
           </div>
           <span className="text-[11px] font-medium truncate w-full text-center">
