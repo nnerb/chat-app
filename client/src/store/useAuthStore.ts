@@ -23,6 +23,7 @@ interface AuthState {
   isCheckingAuth: boolean;
   onlineUsers: string[]
   socket: ReturnType<typeof io> | null
+  typingUsers: string[]
   checkAuth: () => Promise<void>;
   signup: (data: FormDataProps) => Promise<void>;
   logout: () => Promise<void>;
@@ -31,6 +32,8 @@ interface AuthState {
   removeProfile: () => Promise<void>
   connectSocket: () => void;
   disconnectSocket: () => void;
+  startTyping: (conversationId: string) => void;  // <-- Add this
+  stopTyping: (conversationId: string) => void;   // <-- Add this
 }
 
 export const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/"
@@ -43,6 +46,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isCheckingAuth: true,
   onlineUsers: [],
   socket: null,
+  typingUsers: [],
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check");
@@ -167,9 +171,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     newSocket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds })
     })
+
+     // Listen for typing events
+    newSocket.on("userTyping", ({ senderId }) => {
+      console.log(`🟣 Frontend received 'userTyping' from ${senderId}`);
+      set((state) => ({
+        typingUsers: [...new Set([...state.typingUsers, senderId])],
+      }));
+    });
+
+    newSocket.on("userStoppedTyping", ({ senderId }) => {
+      set((state) => ({
+        typingUsers: state.typingUsers.filter((id) => id !== senderId),
+      }));
+    });
   },
   disconnectSocket: () => {
    const { socket } = get()
     if (socket?.connected) socket?.disconnect();
-  }
+  },
+  startTyping: (conversationId) => {
+    const { socket, authUser } = get();
+    if (socket && authUser) {
+      console.log("Emitting 'typing' event for:", conversationId);
+      socket.emit("typing", { senderId: authUser._id, conversationId });
+    }
+  },
+
+  stopTyping: (conversationId) => {
+    const { socket, authUser } = get();
+    if (socket && authUser) {
+      socket.emit("stopTyping", { senderId: authUser._id, conversationId });
+    }
+  },
 }))

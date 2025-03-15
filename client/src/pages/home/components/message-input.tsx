@@ -1,10 +1,12 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
+// import { NodeJS } from "node";
 import { Image, Send, Smile, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMessageStore } from "../../../store/useMessageStore";
 import { MessageDataProps } from "../../../types";
 import { useParams } from "react-router-dom";
 import EmojiPicker, { Theme } from "emoji-picker-react";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState<string | ArrayBuffer | null>(null);
@@ -12,6 +14,8 @@ const MessageInput = () => {
   const { sendMessage, text, setText, isMessagesLoading } = useMessageStore();
   const { conversationId } = useParams();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { startTyping, stopTyping } = useAuthStore();
+  const stopTypingTimeoutRef = useRef<number | null>(null);
 
   const maxHeight = 120;
 
@@ -39,6 +43,8 @@ const MessageInput = () => {
     if (!text.trim() && !imagePreview) return;
 
     try {
+      
+      if (conversationId) stopTyping(conversationId);
       await sendMessage({
         text: text.trim(),
         image: imagePreview,
@@ -79,6 +85,52 @@ const MessageInput = () => {
     setText((prevText) => prevText + emojiObject.emoji)
   };
 
+  // Modified handler with empty text check
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    setText(newText);
+
+    // Immediate stop if text is empty
+    if (newText.trim() === "") {
+      if (stopTypingTimeoutRef.current) {
+        clearTimeout(stopTypingTimeoutRef.current);
+      }
+      if (conversationId) stopTyping(conversationId);
+    } else {
+      // Only trigger typing for non-empty text
+      if (conversationId) startTyping(conversationId);
+      
+      // Reset debounce timer
+      if (stopTypingTimeoutRef.current) {
+        clearTimeout(stopTypingTimeoutRef.current);
+      }
+      stopTypingTimeoutRef.current = setTimeout(() => {
+        if (conversationId) stopTyping(conversationId);
+      }, 1500);
+    }
+  };
+
+  // Cleanup timers
+  useEffect(() => {
+    return () => {
+      if (stopTypingTimeoutRef.current) {
+        clearTimeout(stopTypingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const { socket } = useAuthStore.getState();
+    if (socket && conversationId) {
+      socket.emit("joinConversation", conversationId);
+    }
+    return () => {
+      if (socket && conversationId) {
+        socket.emit("leaveConversation", conversationId);
+      }
+    };
+  }, [conversationId]);
+
   return (
     <div className="p-4 w-full relative">
       {imagePreview && (
@@ -110,7 +162,13 @@ const MessageInput = () => {
             disabled: resize-none !pr-9 min-h-10 placeholder:whitespace-nowrap"
             placeholder="Type a message..."
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleTextChange}
+            onBlur={() => {
+              if (stopTypingTimeoutRef.current) {
+                clearTimeout(stopTypingTimeoutRef.current);
+              }
+              if (conversationId) stopTyping(conversationId);
+            }}
             onKeyDown={handleKeyDown}
             disabled={isMessagesLoading}
             rows={1}
@@ -157,7 +215,7 @@ const MessageInput = () => {
         >
           <Send size={22} />
         </button>
-      </form>
+      </form> 
     </div>
   );
 };

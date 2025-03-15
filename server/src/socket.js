@@ -27,8 +27,29 @@ io.on("connection", (socket) => {
     User.findByIdAndUpdate(userId, { lastSeen: null }, { new: true }).exec();
   }
 
+  socket.on("joinConversation", (conversationId) => {
+    socket.join(conversationId);
+  });
+  
+  socket.on("leaveConversation", (conversationId) => {
+    socket.leave(conversationId);
+  });
+
   // io.emit used to send events to all connected clients or broadcasting it
   io.emit("getOnlineUsers", Object.keys(userSocketMap))
+
+   // Listen for typing event
+  socket.on("typing", ({ senderId, conversationId }) => {
+    console.log(`🔵 Server received 'typing' event from ${senderId} in conversation ${conversationId}`);
+    // Emit to the correct room
+    socket.to(conversationId).emit("userTyping", { senderId });
+
+    console.log(`🟢 Server emitting 'userTyping' to room ${conversationId} with senderId: ${senderId}`);
+  });
+
+  socket.on("stopTyping", ({ conversationId, senderId }) => {
+    socket.to(conversationId).emit("userStoppedTyping", { senderId });
+  });
 
   socket.on("disconnect", async() => {
     console.log('A user is disconnected', socket.id)
