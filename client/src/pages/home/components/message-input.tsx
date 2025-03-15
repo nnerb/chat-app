@@ -103,11 +103,11 @@ const MessageInput = () => {
       )}
 
       <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-        <div className="flex-1 flex gap-2 relative">
+        <div className="flex-1 flex gap-2 relative items-center">
           <textarea
             ref={textareaRef}
             className="w-full textarea rounded-lg textarea-sm sm:textarea-md 
-            disabled: resize-none !pr-9 min-h-10"
+            disabled: resize-none !pr-9 min-h-10 placeholder:whitespace-nowrap"
             placeholder="Type a message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
