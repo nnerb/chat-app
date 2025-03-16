@@ -22,8 +22,7 @@ const MessageContent = () => {
   const messageEndRef = useRef<HTMLDivElement>(null)
   const observer = useRef<IntersectionObserver | null>(null)
   const { conversationId } = useParams()
-
-
+  
   const topMessageRef = useCallback((node: HTMLDivElement) => {
       if (isFetchingMoreMessages) return 
       if (observer.current) observer.current.disconnect()
@@ -51,7 +50,7 @@ const MessageContent = () => {
         console.log("[MessageContent] Unsubscribing to messages...");
         unsubscribeToMessages()
       }
-    }, [messages, subscribeToMessages, unsubscribeToMessages]);
+    }, [messages, subscribeToMessages, unsubscribeToMessages, typingUsers]);
   
 
   return ( 
@@ -70,10 +69,13 @@ const MessageContent = () => {
           <IndividualChat message={message} selectedUser={selectedUser} />
         </div>
       ))}
-      {selectedUser && typingUsers.includes(selectedUser?._id) && (
-        <TypingIndicator selectedUser={selectedUser} />
-      )}
+      <div ref={messageEndRef}>
+        {selectedUser && typingUsers.includes(selectedUser?._id) && (
+          <TypingIndicator selectedUser={selectedUser} />
+        )}
+      </div>
     </div>
+
    );
 }
  
