@@ -38,11 +38,11 @@ const ChatHeader = () => {
           {/* Avatar */}
           <div className="chat-image avatar">
             {isMessagesLoading ? (
-              <div className="size-10 rounded-full">
+              <div className="size-8 md:size-10 rounded-full">
                 <div className="skeleton w-full h-full rounded-full" />
               </div> 
               ) : (
-              <div className="size-10 rounded-full relative">
+              <div className="size-8 md:size-10 rounded-full relative text-xs md:text-sm">
                 <img src={selectedUser?.profilePic || "/avatar.png"} alt={selectedUser?.fullName} />
               </div>
               )
@@ -65,8 +65,8 @@ const ChatHeader = () => {
             </div>
             ) : 
             <>
-              <h3 className="font-medium">{selectedUser?.fullName}</h3>
-              <p className="text-sm text-base-content/70">
+              <h3 className="font-medium text-sm md:text-base">{selectedUser?.fullName}</h3>
+              <p className="text-xs text-base-content/70">
               {onlineUsers.includes(selectedUser?._id || "") 
                 ? "Active now" 
                 : selectedUser?.lastSeen && `Active ${formatRelativeTime(selectedUser?.lastSeen)}`} 

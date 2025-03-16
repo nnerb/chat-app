@@ -6,11 +6,11 @@ const SidebarSkeleton = () => {
 
   return (
     <aside
-      className="h-full w-20 lg:w-72 border-r border-base-300 
+      className="h-full w-16 md:w-20 lg:w-72 border-r border-base-300 
     flex flex-col transition-all duration-200"
     >
       {/* Header */}
-      <div className="border-b border-base-300 w-full p-5">
+      <div className="border-b border-base-300 w-full px-5 py-4 md:py-4.5">
         <div className="flex items-center gap-2">
           <Users className="w-6 h-6" />
           <span className="font-medium hidden lg:block">Contacts</span>
@@ -23,7 +23,7 @@ const SidebarSkeleton = () => {
           <div key={idx} className="w-full p-3 flex items-center gap-3">
             {/* Avatar skeleton */}
             <div className="relative mx-auto lg:mx-0">
-              <div className="skeleton size-12 rounded-full" />
+              <div className="skeleton size-8 md:size-12 rounded-full" />
             </div>
 
             {/* User info skeleton - only visible on larger screens */}

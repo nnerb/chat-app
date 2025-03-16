@@ -53,8 +53,8 @@ const Sidebar = () => {
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
-    <aside className="h-full w-20 xl:w-72 border-r border-base-300 flex flex-col transition-all duration-200 z-0">
-      <div className="border-b border-base-300 w-full p-5">
+    <aside className="h-full w-16 md:w-20 xl:w-72 border-r border-base-300 flex flex-col transition-all duration-200 z-0">
+      <div className="border-b border-base-300 w-full px-5 py-4 md:py-4.5">
         <div className="flex items-center justify-center xl:justify-start gap-2">
           <Users className="size-6" />
           <span className="font-medium hidden xl:block">Contacts</span>
@@ -74,7 +74,7 @@ const Sidebar = () => {
         </div>
       </div>
 
-      <div className="overflow-y-auto w-full py-3">
+      <div className="overflow-y-auto w-full">
         {filteredUsers.map((user) => (
           <button
             key={user._id}
@@ -90,7 +90,7 @@ const Sidebar = () => {
               <img
                 src={user.profilePicture || "/avatar.png"}
                 alt={user.name}
-                className="size-12 object-cover rounded-full"
+                className="size-10 md:size-12 object-cover rounded-full"
               />
               {onlineUsers.includes(user._id) && (
                 <span

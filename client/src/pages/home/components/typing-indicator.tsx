@@ -8,7 +8,7 @@ const TypingIndicator = ({ selectedUser } : TypingIndicatorProps ) => {
   return ( 
     <div className="flex gap-1.5">
       <div className="chat-image avatar">
-        <div className="size-10 rounded-full border flex">
+        <div className="size-8 md:size-10 rounded-full border flex">
           <img
             src={selectedUser?.profilePic || "/avatar.png"}
             alt="profile pic"

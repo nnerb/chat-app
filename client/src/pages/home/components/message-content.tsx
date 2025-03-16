@@ -94,7 +94,7 @@ const MessageContent = () => {
       ))}
       {!isBottom && (
         <button className="grid place-items-center w-full sticky bottom-0 cursor-pointer" onClick={() => scrollToBottom()}>
-        {selectedUser && typingUsers.includes(selectedUser?._id) ?(
+        {selectedUser && typingUsers.includes(selectedUser?._id) ? (
           <div className="space-x-1 rounded-2xl grid place-items-center sticky bottom-0 w-full">
             <ul className="flex items-center space-x-1 bg-base-200 p-3 rounded-2xl animate-pulse duration-1000">
               <li className="h-1 w-1 bg-gray-400 rounded-full animate-bounce delay-100" />

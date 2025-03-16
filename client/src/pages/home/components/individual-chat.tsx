@@ -34,7 +34,7 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
   return ( 
     <>
       <div className="chat-image avatar">
-        <div className="size-10 rounded-full border">
+        <div className="size-8 md:size-10 rounded-full border">
           <img
             src={
               message.senderId === authUser?._id
