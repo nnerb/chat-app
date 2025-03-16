@@ -80,7 +80,7 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
               className="sm:max-w-[200px] rounded-md mb-2 relative"
             />  
           )}
-          {message.text && <p className="w-full">{message.text}</p>}
+          {message.text && <p className="w-full break-words">{message.text}</p>}
         </div>
         {message.senderId !== authUser?._id && 
           <div className="dropdown dropdown-top dropdown-left w-3">
