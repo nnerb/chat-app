@@ -1,4 +1,5 @@
 import { AuthUser } from "../useAuthStore";
+import { MessagesProps } from "./message-types";
 
 export interface ConversationProps {
   _id: string;
@@ -9,5 +10,8 @@ export interface ConversationProps {
 
 export interface ConversationResponse {
   conversation: ConversationProps,
-  selectedUser: AuthUser
+  selectedUser: AuthUser | null
+  messages: MessagesProps[],
+  currentPage: number,
+  hasMore: boolean,
 }

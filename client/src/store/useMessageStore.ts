@@ -7,11 +7,19 @@ import { AIGeneratedResponseProps, MessageDataProps } from "../types";
 import {  IUserSidebar, MessagesProps } from "./types/message-types";
 import { ConversationProps, ConversationResponse } from "./types/conversation-types";
 
+interface CachedMessages {
+  messages: MessagesProps[];
+  timestamp: string;
+  selectedUser: AuthUser | null;
+  hasMoreMessages: boolean | null;
+  currentPage: number;
+}
 interface UseMessageStoreProps {
   text: string;
   setText:  (text: string | ((prevText: string) => string)) => void;
   messages: MessagesProps[];
   setMessages: (messages: MessagesProps[]) => void
+  cachedMessages: Map<string, CachedMessages>;
   users: IUserSidebar[];
   selectedUser: AuthUser | null;
   isUsersLoading: boolean;
@@ -28,7 +36,6 @@ interface UseMessageStoreProps {
   aiGeneratedRepliesCount: number;
   selectedMessageId: string | null;
   cachedAIResponses: Map<string, string[]>;
-  cachedMessages: Map<string, MessagesProps[]>;
   cachedConversation: Map<string, ConversationProps | null>;
   cachedUsers: Map<string, IUserSidebar[] | []>
   isSubscribed: boolean;
@@ -45,10 +52,13 @@ interface UseMessageStoreProps {
   generateAIResponse: (data: AIGeneratedResponseProps, regenerate?: boolean) => Promise<void>
 }
 
+const CACHE_TTL = 1000 * 100 * 5; // 5 minutes
+
 export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   text: "",
   setText: (text) => set((state) => ({ text: typeof text === "function" ? text(state.text) : text })),
   messages: [],
+  cachedMessages: new Map(),
   setMessages: (messages) => set({ messages }),
   resetMessages: () => set({ messages: [], selectedUser: null }),
   users: [],
@@ -67,7 +77,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   isGeneratingAIResponse: false,
   selectedMessageId: null,
   cachedAIResponses: new Map(),
-  cachedMessages: new Map(),
   cachedConversation: new Map(),
   cachedUsers: new Map(),
   isSubscribed: false,
@@ -75,12 +84,19 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     const userId = useAuthStore.getState().authUser?._id
     if (!userId) return
 
+    const { cachedUsers } = get()
+    const cachedUsersResponse = cachedUsers.get(userId)
+    if (cachedUsersResponse) {
+      set({ users: cachedUsersResponse })
+      return
+    }
+
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
-      set(({ 
+      set((state) =>({ 
         users: res.data,
-        // cachedUsers: new Map(state.cachedUsers).set(userId, res.data)
+        cachedUsers: new Map(state.cachedUsers).set(userId, res.data),
       }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -134,21 +150,39 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     }
   },
   getMessages: async (conversationId) => {
-  
+
+    const { cachedMessages } = get();
+    const cachedEntry = cachedMessages.get(conversationId);
+
+    if (cachedEntry && Date.now() - new Date(cachedEntry.timestamp).getTime() < CACHE_TTL) {
+      set({
+        messages: cachedEntry.messages, 
+        selectedUser: cachedEntry.selectedUser,
+        hasMoreMessages: cachedEntry.hasMoreMessages,
+        currentPage: cachedEntry.currentPage,
+      });
+      return;
+    }
+
     set({ isMessagesLoading : true });
     try {
       const res = await axiosInstance.get(`/messages/${conversationId}`);
-      const { hasMore, currentPage, messages, selectedUser, conversation } = res.data
-      set({ 
+      const { hasMore, currentPage, messages, selectedUser, conversation } = res.data as ConversationResponse
+      set((state) => ({ 
+        cachedMessages: new Map(state.cachedMessages).set(conversationId, {
+          messages,
+          selectedUser,
+          hasMoreMessages: hasMore,
+          currentPage,
+          timestamp: new Date().toISOString(),
+        }),
         messages, 
         selectedUser, 
         conversation,
         validConversationId: true,
         hasMoreMessages: hasMore,
         currentPage,
-        // cachedMessages: new Map(state.cachedMessages).set(conversationId, messages),
-        // cachedHasMoreMessages: new Map(state.cachedHasMoreMessages).set(conversationId, hasMore)
-      });
+      }));
     } catch (error) {
       if (axios.isAxiosError(error)) {
         // Narrowing the type of error to AxiosError
@@ -215,7 +249,16 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
       const { messages } = res.data
-      set(({ messages }));
+      set((state) => ({ 
+        cachedMessages: new Map(state.cachedMessages).set(conversationId, {
+          messages,
+          selectedUser: state.selectedUser,
+          hasMoreMessages: state.hasMoreMessages,
+          currentPage: state.currentPage,
+          timestamp: new Date().toISOString(),
+        }),
+        messages
+       }));
     } catch (error) {
       if (axios.isAxiosError(error)) {
         // Narrowing the type of error to AxiosError
