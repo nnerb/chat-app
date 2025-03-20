@@ -21,3 +21,12 @@ interface ILastMessage {
   sender: string;
   timestamp: string;
 }
+export interface FetchMoreMessagesProps {
+  messages: MessagesProps[],
+  hasMore: boolean;
+}
+
+export interface SendMessageProps { 
+  messages: MessagesProps[],
+  newMessage: MessagesProps 
+}

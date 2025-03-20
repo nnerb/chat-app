@@ -4,7 +4,7 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { AuthUser, useAuthStore } from "./useAuthStore";
 import { AIGeneratedResponseProps, MessageDataProps } from "../types";
-import {  IUserSidebar, MessagesProps } from "./types/message-types";
+import {  FetchMoreMessagesProps, IUserSidebar, MessagesProps, SendMessageProps } from "./types/message-types";
 import { ConversationProps, ConversationResponse } from "./types/conversation-types";
 
 interface CachedMessages {
@@ -204,12 +204,22 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       const res = await axiosInstance.get(`/messages/${conversationId}`, {
         params: { page: currentPage + 1, limit: 10 },
       });
-      const { messages, hasMore } = res.data;
-      set((state) => ({
-        messages: [...messages, ...state.messages],
-        currentPage: currentPage + 1,
-        hasMoreMessages: hasMore
-      }));
+      const { messages, hasMore } : FetchMoreMessagesProps = res.data
+      set((state) => {
+        const mergedMessages = [...messages, ...state.messages];
+
+        const dedupedMessages= mergedMessages.reduce<MessagesProps[]>((acc, message) => {
+          if (!acc.find((m) => m._id === message._id)) {
+            acc.push(message);  
+          }
+          return acc;
+        }, []);
+        return {
+          messages: dedupedMessages,
+          currentPage: currentPage + 1,
+          hasMoreMessages: hasMore
+        }
+      });
     } catch (error) {
       console.error("Failed to fetch more messages:", error);
       toast.error("Failed to load older messages.");
@@ -219,7 +229,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   }, 
   sendMessage: async (messageData) => {
     const { selectedUser } = get();
-    const conversationId = messageData.conversationId;
+    const { conversationId } = messageData;
     const userId = useAuthStore.getState().authUser?._id;
     if (!selectedUser?._id || !conversationId || !userId) return;
 
@@ -243,22 +253,26 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         const timeB = new Date(b.lastMessage?.timestamp || 0).getTime();
         return timeB - timeA; // Descending order (latest first)
       });
-      return { users: sortedUsers }  
+      return { users: sortedUsers, currentPage: state.currentPage }  
     });
 
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-      const { messages } = res.data
-      set((state) => ({ 
-        cachedMessages: new Map(state.cachedMessages).set(conversationId, {
-          messages,
-          selectedUser: state.selectedUser,
-          hasMoreMessages: state.hasMoreMessages,
-          currentPage: state.currentPage,
-          timestamp: new Date().toISOString(),
-        }),
-        messages
-       }));
+      const { messages, newMessage } : SendMessageProps = res.data
+      set((state) => {
+        const updatedMessages = [...state.messages, newMessage]
+        console.log("Messages", messages)
+        return { 
+            cachedMessages: new Map(state.cachedMessages).set(conversationId, {
+            messages: updatedMessages,
+            selectedUser: state.selectedUser,
+            hasMoreMessages: state.hasMoreMessages,
+            currentPage: state.currentPage,
+            timestamp: new Date().toISOString(),
+          }),
+          messages: updatedMessages
+        }
+      });
     } catch (error) {
       if (axios.isAxiosError(error)) {
         // Narrowing the type of error to AxiosError
