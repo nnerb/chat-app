@@ -4,6 +4,7 @@ import { FormDataProps, LoginDataProps, UpdateProfileProps } from "../types";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { io } from "socket.io-client";
+import { useMessageStore } from "./useMessageStore";
 
 export interface AuthUser {
   _id: string;
@@ -87,7 +88,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { authUser } = get()
       await axiosInstance.post(`/auth/logout/${authUser?._id}`)
-      set({ authUser: null })
+      useMessageStore.setState({
+        cachedAIResponses: new Map(),
+        cachedConversation: new Map(),
+        cachedMessages: new Map(),
+        cachedUsers: new Map(),
+      })
+      set({ 
+        authUser: null,
+      })
       get().disconnectSocket()
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -168,6 +177,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     })
     newSocket.connect()
     set({ socket: newSocket })
+
+    useAuthStore.setState((state) => ({
+      authUser: state.authUser ? { ...state.authUser, lastSeen: "" } : null,
+    }))
+
     newSocket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds })
     })
@@ -187,7 +201,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
   disconnectSocket: () => {
-   const { socket } = get()
+    const { socket } = get()
+    useMessageStore.setState({
+      cachedAIResponses: new Map(),
+      cachedConversation: new Map(),
+      cachedMessages: new Map(),
+      cachedUsers: new Map(),
+    })
+    useAuthStore.setState((state) => ({
+      authUser: state.authUser ? { ...state.authUser, lastSeen: new Date().toString() } : null,
+    }))
     if (socket?.connected) socket?.disconnect();
   },
   startTyping: (conversationId) => {

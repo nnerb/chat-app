@@ -272,19 +272,53 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   },
   subscribeToMessages: () => {
     const socket = useAuthStore.getState().socket;
-    const { selectedUser } = get()
     if (!socket) {
       console.log("[Socket] No socket connection found");
       return;
     }
     console.log("[Socket] Subscribing to messages...");
     socket?.on("newMessage", (newMessage: MessagesProps) => {
-      const userId = useAuthStore.getState().authUser?._id
-      const isMessageSentFromSelectedUser = newMessage.senderId !== selectedUser?._id
-      if (!userId || isMessageSentFromSelectedUser) return
+      const userId = useAuthStore.getState().authUser?._id;
+      const { conversation } = get();
+  
+      // Check if the message is intended for the current user
+      if (newMessage.receiverId !== userId) return;
+  
+      // Determine if the message belongs to the currently viewed conversation
+      const isCurrentConversation = newMessage.conversationId === conversation?._id;
+  
       set((state) => {
+        const conversationId = newMessage.conversationId;
+        const existingCache = state.cachedMessages.get(conversationId);
+  
+        // Update the cache for the conversation
+        const newCachedMessages = new Map(state.cachedMessages);
+        if (existingCache) {
+          const updatedMessages = [...existingCache.messages, newMessage];
+          newCachedMessages.set(conversationId, {
+            ...existingCache,
+            messages: updatedMessages,
+            timestamp: new Date().toISOString(),
+          });
+        } else {
+          // Create a new cache entry if none exists (though unlikely)
+          newCachedMessages.set(conversationId, {
+            messages: [newMessage],
+            selectedUser: null,
+            hasMoreMessages: null,
+            currentPage: 1,
+            timestamp: new Date().toISOString(),
+          });
+        }
+  
+        // Update messages state only if it's the current conversation
+        const updatedMessages = isCurrentConversation
+          ? [...state.messages, newMessage]
+          : state.messages;
+  
         return {
-          messages: [...state.messages, newMessage],  // Add the new message to the messages array
+          messages: updatedMessages,
+          cachedMessages: newCachedMessages,
         };
       });
     });
