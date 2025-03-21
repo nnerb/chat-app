@@ -28,8 +28,22 @@ const userSchema = new mongoose.Schema({
   lastSeen: {
     type: Date,
     default: Date.now()
+  },
+  loginAttempts: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  lockUntil: {
+    type: Number
   }
 }, { timestamps: true })
+
+// Virtual property to check if the account is currently locked
+userSchema.virtual('isLocked').get(function() {
+  // If lockUntil is set and in the future, the account is locked
+  return !!(this.lockUntil && this.lockUntil > Date.now());
+});
 
 const User = mongoose.model("User", userSchema)
 

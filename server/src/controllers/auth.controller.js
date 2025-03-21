@@ -50,6 +50,10 @@ export const signup = async (req, res) => {
   }
 }
 
+
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCK_TIME = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body
@@ -60,12 +64,26 @@ export const login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid credentials"})
     }
 
+    if (user.isLocked) {
+      return res.status(403).json({ message: 'Account is temporarily locked due to too many failed login attempts.' });
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
+      user.loginAttempts += 1;
+      if (user.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+        user.lockUntil = Date.now() + LOCK_TIME;
+      }
+      await user.save();
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 
+    // Reset login attempts and lockUntil on successful login
+    user.loginAttempts = 0;
+    user.lockUntil = undefined; // Clear lockUntil
+    user.lastLogin = Date.now();
+    await user.save();
     generateToken(user._id, res)
     
     return res.status(200).json({
