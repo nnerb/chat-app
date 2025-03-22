@@ -20,6 +20,7 @@ interface AuthState {
   authUser: AuthUser | null;
   isSigningUp: boolean;
   isLoggingIn: boolean;
+  isLoggingOut: boolean;
   isUpdatingProfile: boolean;
   isCheckingAuth: boolean;
   onlineUsers: string[]
@@ -43,6 +44,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   authUser: null,
   isSigningUp: false,
   isLoggingIn: false,
+  isLoggingOut: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
   onlineUsers: [],
@@ -85,6 +87,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   logout: async () => {
+    set({ isLoggingOut: true });
     try {
       const { authUser } = get()
       await axiosInstance.post(`/auth/logout/${authUser?._id}`)
@@ -107,6 +110,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Handle non-Axios errors
         toast.error('An unexpected error occurred');
       }
+    } finally {
+      set({ isLoggingOut: false });
     }
   },
   login: async (data) => {

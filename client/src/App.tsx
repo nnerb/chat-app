@@ -19,7 +19,7 @@ import MessageInput from "./pages/home/components/message-input";
 
 const App = () => {
 
-  const { authUser, checkAuth, isCheckingAuth } = useAuthStore()
+  const { authUser, checkAuth, isCheckingAuth, isLoggingOut } = useAuthStore()
   const { validConversationId, isMessagesLoading  } = useMessageStore()
   const { theme } = useThemeStore()
 
@@ -28,7 +28,7 @@ const App = () => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [checkAuth, theme])
 
-  if (isCheckingAuth && !authUser) return <Loading />
+  if (isCheckingAuth && !authUser || isLoggingOut) return <Loading />
 
   return ( 
     <div data-theme={theme} className="w-full min-h-screen">

@@ -14,6 +14,21 @@ interface CachedMessages {
   hasMoreMessages: boolean | null;
   currentPage: number;
 }
+
+interface CachedUsers {
+  users: IUserSidebar[];
+  timestamp: string;
+}
+
+interface CachedConversation {
+  conversation: ConversationProps;
+  timestamp: string;
+}
+
+interface CachedAIResponses {
+  replyOptions: string[];
+  timestamp: string;
+}
 interface UseMessageStoreProps {
   text: string;
   setText:  (text: string | ((prevText: string) => string)) => void;
@@ -35,9 +50,9 @@ interface UseMessageStoreProps {
   isGeneratingAIResponse: boolean;
   aiGeneratedRepliesCount: number;
   selectedMessageId: string | null;
-  cachedAIResponses: Map<string, string[]>;
-  cachedConversation: Map<string, ConversationProps | null>;
-  cachedUsers: Map<string, IUserSidebar[] | []>
+  cachedAIResponses: Map<string, CachedAIResponses>;
+  cachedConversation: Map<string, CachedConversation>;
+  cachedUsers: Map<string, CachedUsers>
   isSubscribed: boolean;
   resetMessages: () => void;
   getUsers: () => Promise<void>;
@@ -85,9 +100,9 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     if (!userId) return
 
     const { cachedUsers } = get()
-    const cachedUsersResponse = cachedUsers.get(userId)
-    if (cachedUsersResponse) {
-      set({ users: cachedUsersResponse })
+    const cachedUsersEntry = cachedUsers.get(userId)
+    if (cachedUsersEntry && (Date.now() - new Date(cachedUsersEntry.timestamp).getTime() < CACHE_TTL)) {
+      set({ users: cachedUsersEntry.users })
       return
     }
 
@@ -96,7 +111,10 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       const res = await axiosInstance.get("/messages/users");
       set((state) =>({ 
         users: res.data,
-        cachedUsers: new Map(state.cachedUsers).set(userId, res.data),
+        cachedUsers: new Map(state.cachedUsers).set(userId, {
+          users: res.data,
+          timestamp: new Date().toISOString(),
+        }),
       }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -114,11 +132,11 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   getConversation: async (selectedUser, navigate) => {
     if (!selectedUser?._id) return;
     const { cachedConversation } = get()
-    const cachedConversationResponse = cachedConversation.get(selectedUser._id)
+    const cachedConversationEntry = cachedConversation.get(selectedUser._id)
 
-    if (cachedConversationResponse) {
-      set({ conversation: cachedConversationResponse })
-      navigate(`/messages/${cachedConversationResponse._id}`);
+    if (cachedConversationEntry && (Date.now() - new Date(cachedConversationEntry.timestamp).getTime() < CACHE_TTL)) {
+      set({ conversation: cachedConversationEntry.conversation })
+      navigate(`/messages/${cachedConversationEntry.conversation._id}`);
       return
     }
 
@@ -126,13 +144,16 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     try {
       // Fetch or create conversation with the selected user
       const res = await axiosInstance.get(`/conversation/${selectedUser._id}`);
-      const { conversation }  = res.data as ConversationResponse
+      const { conversation } : ConversationResponse = res.data
 
       if (conversation) {
         set((state) => ({ 
           conversation,
           validConversationId: true,
-          cachedConversation: new Map(state.cachedConversation).set(selectedUser._id, conversation)
+          cachedConversation: new Map(state.cachedConversation).set(selectedUser._id, {
+            conversation,
+            timestamp: new Date().toISOString(),
+          })
         }))
         navigate(`/messages/${conversation._id}`);
       } else {
@@ -152,14 +173,14 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   getMessages: async (conversationId) => {
 
     const { cachedMessages } = get();
-    const cachedEntry = cachedMessages.get(conversationId);
+    const cachedMessagesEntry = cachedMessages.get(conversationId);
 
-    if (cachedEntry && Date.now() - new Date(cachedEntry.timestamp).getTime() < CACHE_TTL) {
+    if (cachedMessagesEntry && Date.now() - new Date(cachedMessagesEntry.timestamp).getTime() < CACHE_TTL) {
       set({
-        messages: cachedEntry.messages, 
-        selectedUser: cachedEntry.selectedUser,
-        hasMoreMessages: cachedEntry.hasMoreMessages,
-        currentPage: cachedEntry.currentPage,
+        messages: cachedMessagesEntry.messages, 
+        selectedUser: cachedMessagesEntry.selectedUser,
+        hasMoreMessages: cachedMessagesEntry.hasMoreMessages,
+        currentPage: cachedMessagesEntry.currentPage,
       });
       return;
     }
@@ -167,7 +188,13 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     set({ isMessagesLoading : true });
     try {
       const res = await axiosInstance.get(`/messages/${conversationId}`);
-      const { hasMore, currentPage, messages, selectedUser, conversation } = res.data as ConversationResponse
+      const { 
+        hasMore, 
+        currentPage, 
+        messages, 
+        selectedUser, 
+        conversation 
+      } : ConversationResponse = res.data;
       set((state) => ({ 
         cachedMessages: new Map(state.cachedMessages).set(conversationId, {
           messages,
@@ -384,10 +411,10 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     try {
       const { cachedAIResponses } = get()
       const cacheKey = `${data.conversationId}-${data.selectedMessageId}`;
-      const cachedResponses = cachedAIResponses.get(cacheKey)
+      const cachedAIEntry = cachedAIResponses.get(cacheKey)
 
-      if (cachedResponses && !regenerate) {
-        set({ aiGeneratedResponse: cachedResponses, selectedMessageId: data.selectedMessageId });
+      if (cachedAIEntry && !regenerate && (Date.now() - new Date(cachedAIEntry.timestamp).getTime() < CACHE_TTL)) {
+        set({ aiGeneratedResponse: cachedAIEntry.replyOptions, selectedMessageId: data.selectedMessageId });
         return;
       }
 
@@ -397,7 +424,10 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         aiGeneratedResponse: replyOptions,
         aiGeneratedRepliesCount: updatedAiGeneratedRepliesCount,
         selectedMessageId: data.selectedMessageId,
-        cachedAIResponses: new Map(state.cachedAIResponses).set(cacheKey, res.data.replyOptions),
+        cachedAIResponses: new Map(state.cachedAIResponses).set(cacheKey, {
+          replyOptions,
+          timestamp: new Date().toISOString(),
+        }),
       }));
     } catch (error) {
       if (axios.isAxiosError(error)) {
