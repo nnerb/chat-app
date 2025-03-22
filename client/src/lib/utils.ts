@@ -33,3 +33,40 @@ export const formatRelativeTime = (timestamp: string) => {
   const yearsAgo = Math.floor(monthsAgo / 12);
   return `${yearsAgo}y ago`;
 };
+
+const MAX_CACHE_SIZE = 50; // Maximum cache size
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+
+// Generic cache manager
+const createCacheWithLimit = <T>(cache: Map<string, T>): Map<string, T> => {
+  if (cache.size >= MAX_CACHE_SIZE) {
+    const firstEntry = cache.keys().next();
+    if (!firstEntry.done && firstEntry.value) {
+      cache.delete(firstEntry.value);
+    }
+  }
+  return cache;
+};
+
+// Generic cache updater
+export const updateCache = <T>(
+  cache: Map<string, T>,
+  key: string,
+  value: T
+): Map<string, T> => {
+  const newCache = new Map(cache);
+  newCache.set(key, value);
+  return createCacheWithLimit(newCache);
+};
+
+// Generic cache getter with TTL check
+export const getFromCache = <T>(
+  cache: Map<string, T & { timestamp: number }>,
+  key: string
+): T | undefined => {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.timestamp < CACHE_TTL) {
+    return entry;
+  }
+  return undefined;
+};
