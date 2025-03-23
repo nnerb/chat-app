@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 // Virtual property to check if the account is currently locked
-userSchema.virtual('isLocked').get(() => {
+userSchema.virtual('isLocked').get(function() {
   // If lockUntil is set and in the future, the account is locked
   return !!(this.lockUntil && this.lockUntil > Date.now());
 });
