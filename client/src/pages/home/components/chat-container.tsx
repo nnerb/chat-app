@@ -6,6 +6,7 @@ import MessageSkeleton from "../../../components/skeletons/message-skeleton";
 import MessageInput from "./message-input";
 import { useParams } from "react-router-dom";
 import MessageContent from "./message-content";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 
 const ChatContainer = () => {
@@ -14,6 +15,7 @@ const ChatContainer = () => {
     isMessagesLoading,
     resetMessages,
   } = useMessageStore()
+  const { socket, authUser } = useAuthStore()
 
   const { conversationId } = useParams()
 
@@ -26,7 +28,7 @@ const ChatContainer = () => {
     return () => {
       resetMessages()
     }
-  },[conversationId, resetMessages, getMessages])
+  },[conversationId, resetMessages, getMessages, socket, authUser])
 
   if (isMessagesLoading) {
     return (

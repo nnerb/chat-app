@@ -3,7 +3,7 @@ import cloudinary from "../lib/cloudinary.js"
 import Conversation from "../models/conversation.model.js"
 import Message from "../models/message.model.js"
 import User from "../models/user.model.js"
-import { getReceiverSocketId, io } from "../socket.js"
+import { getReceiverSocketId, io, userSocketMap } from "../socket.js"
 import OpenAi from "openai"
 
 export const getUsersForSidebar = async(req, res) => {
@@ -130,7 +130,7 @@ export const sendMessage = async(req, res) => {
     const { id: chatPartnerId } = req.params
     const currentUserId = req.user._id
 
-     // Find or create the conversation
+
     const conversation = await Conversation.findOne({
       participants: { $all: [currentUserId, chatPartnerId] },
     });
@@ -142,14 +142,14 @@ export const sendMessage = async(req, res) => {
       const uploadResponse = await cloudinary.uploader.upload(image)
       imageUrl = uploadResponse.secure_url
     }
-    // Fetch the messages for this conversation, sorted by createdAt
     
     const newMessage = new Message({
       conversationId: conversation._id,
       senderId: currentUserId,
       receiverId: chatPartnerId,
       text,
-      image: imageUrl
+      image: imageUrl,
+      status: 'sent'
     })
 
     await newMessage.save()
@@ -158,7 +158,8 @@ export const sendMessage = async(req, res) => {
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage)
       io.to(receiverSocketId).emit("lastMessage", newMessage)
-    }
+      io.to(receiverSocketId).emit('messageReceived', newMessage)
+    } 
 
     const messages = await Message.find({ conversationId: conversation._id })
     .sort({ createdAt: -1 })

@@ -6,6 +6,7 @@ export interface MessagesProps {
  text: string; 
  image: string;
  createdAt: string;
+ status: 'sent' | 'delivered' | 'seen' | 'sending' | string
 }
 
 export interface IUserSidebar {

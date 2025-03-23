@@ -24,7 +24,7 @@ const FormInput = ({
   maxHeight
  } : FormInputProps) => {
 
-   const { sendMessage, text, setText, isMessagesLoading } = useMessageStore();
+   const { sendMessage, text, setText, isMessagesLoading, isSendingMessage } = useMessageStore();
    const { startTyping, stopTyping } = useAuthStore();
    const { conversationId } = useParams();
    const stopTypingTimeoutRef = useRef<number | null>();
@@ -147,9 +147,9 @@ const FormInput = ({
             tabIndex={0}
           >
             <Smile />
-            <div className="dropdown-content">
+            <button className="dropdown-content disabled:btn-disabled" disabled={isMessagesLoading || isSendingMessage}>
               <EmojiPicker onEmojiClick={handleEmojiClick} theme={Theme.AUTO}  />
-            </div>
+            </button>
           </div>
           <input
             type="file"
@@ -157,7 +157,7 @@ const FormInput = ({
             className="hidden"
             ref={fileInputRef}
             onChange={handleImageChange}
-            disabled={isMessagesLoading}
+            disabled={isMessagesLoading || isSendingMessage}
           />
 
           <button
@@ -165,7 +165,7 @@ const FormInput = ({
             className={`flex btn btn-circle disabled:btn-disabled 
                      ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
             onClick={() => fileInputRef.current?.click()}
-            disabled={isMessagesLoading}
+            disabled={isMessagesLoading || isSendingMessage}
           >
             <Image size={20} />
           </button>

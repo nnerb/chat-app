@@ -191,6 +191,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ onlineUsers: userIds })
     })
 
+    newSocket.on("messageDelivered", (data) => {
+      useMessageStore.setState((prevState) => {
+        const updatedMessages = prevState.messages.map((msg) => {
+          if (msg.conversationId === data.conversationId && msg.status === 'sent') {
+            console.log({ ...msg, status: 'delivered '})
+            return { ...msg, status: 'delivered' }
+          }
+          return msg
+        });
+        return { messages: updatedMessages }
+      })
+    })
+
      // Listen for typing events
     newSocket.on("userTyping", ({ senderId }) => {
       console.log(`🟣 Frontend received 'userTyping' from ${senderId}`);

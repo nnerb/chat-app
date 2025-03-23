@@ -40,6 +40,7 @@ interface UseMessageStoreProps {
   isUsersLoading: boolean;
   isConversationLoading: boolean;
   isMessagesLoading: boolean;
+  isSendingMessage: boolean;
   conversation: ConversationProps | null;
   validConversationId: boolean | null;
   conversationIds: string[] | null;
@@ -78,6 +79,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   isConversationLoading: false,
   isUsersLoading: false,
   isMessagesLoading: false,
+  isSendingMessage: false,
   conversation: null,
   validConversationId: null,
   conversationIds: null,
@@ -292,6 +294,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       return { users: sortedUsers, currentPage: state.currentPage, text: "" }  
     });
 
+    set({ isSendingMessage: true })
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
       const { messages, newMessage } : SendMessageProps = res.data
@@ -318,6 +321,8 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         // Handle non-Axios errors
         toast.error('An unexpected error occurred');
       }
+    } finally {
+      set({ isSendingMessage: false })
     }
   },
   subscribeToMessages: () => {

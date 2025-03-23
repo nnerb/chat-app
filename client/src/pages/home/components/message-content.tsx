@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { useParams } from "react-router-dom";
 import TypingIndicator from "./typing-indicator";
+import { formatRelativeTime } from "../../../lib/utils";
 
 const MessageContent = () => {
   const { 
@@ -16,7 +17,8 @@ const MessageContent = () => {
     currentPage,
     selectedUser,
     subscribeToMessages,
-    unsubscribeToMessages
+    unsubscribeToMessages,
+    isSendingMessage
   } = useMessageStore()
   const { authUser, typingUsers } = useAuthStore();
   const messageEndRef = useRef<HTMLDivElement>(null)
@@ -90,6 +92,28 @@ const MessageContent = () => {
           ref={index === 0 ? topMessageRef : messageEndRef} // Use refs only when needed
         >
           <IndividualChat message={message} selectedUser={selectedUser} />
+          {message.senderId === authUser?._id && messages.length - 1 === index && (
+            <div className="chat-header mb-1 absolute right-0 translate-y-full pt-5 -translate-x-5">
+              <span className="text-xs">
+                {isSendingMessage ? 
+                  <span className="inline-flex items-center space-x-1">
+                  <p>Sending...</p>
+                  <Loader2 className="animate-spin h-3 w-3"/>
+                  </span> :  
+                  <> 
+                    {message.status === "sent" &&  `Sent ${formatRelativeTime(message.createdAt)}`}
+                    {message.status === "delivered" && "Delivered"} 
+                    {message.status === "seen" && 
+                    <span className="avatar chat-image h-3 w-3">
+                      <img src={selectedUser?.profilePic || "/avatar.png"} alt={selectedUser?.fullName}/>
+                    </span>
+                    } 
+                  </> 
+                }
+              
+              </span>
+            </div>
+          )}
         </div>
       ))}
       {!isBottom && (
