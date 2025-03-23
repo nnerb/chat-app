@@ -28,19 +28,21 @@ io.on("connection", async (socket) => {
     userSocketMap[userId] = socket.id
     User.findByIdAndUpdate(userId, { lastSeen: null }, { new: true }).exec();
 
-    await Message.updateMany(
-      { receiverId: userId, status: 'sent' },
-      { $set: { status: 'delivered' } }
-    );
     // 1. Find the conversation that contains the userId in participants
     const conversations = await Conversation.find({ participants: userId });
 
-    // 2. For each conversation, update the messages with status 'sent' to 'delivered'
+    // 2. Prepare bulk operations to update messages in all conversations
+    const bulkOps = conversations.map((conversation) => ({
+      updateMany: {
+        filter: { conversationId: conversation._id, receiverId: userId, status: 'sent' },
+        update: { $set: { status: 'delivered' } },
+      },
+    }));
+
+    if (bulkOps.length) {
+      await Message.bulkWrite(bulkOps);
+    }
     for (const conversation of conversations) {
-      await Message.updateMany(
-        { conversationId: conversation._id, status: 'sent' },
-        { $set: { status: 'delivered' }}
-      )
       // 3. Identify the sender
       const senderId = conversation.participants.find(id => id.toString() !== userId);
       // 4. If the sender is only, notify them hehe
