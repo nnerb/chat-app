@@ -52,7 +52,7 @@ const MessageContent = () => {
       console.log("[MessageContent] Unsubscribing to messages...");
       unsubscribeToMessages()
     }
-  }, [messages, subscribeToMessages, unsubscribeToMessages, typingUsers]);
+  }, [messages, subscribeToMessages, unsubscribeToMessages]);
 
   // Observer to detect if the bottom (messageEndRef) is in view
   useEffect(() => {
