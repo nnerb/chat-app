@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minLength: 6,
+    minlenght: 6
   },
   profilePic: {
     type: String,
@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema({
   },
   lastSeen: {
     type: Date,
-    default: Date.now,
+    default: Date.now()
   },
   loginAttempts: {
     type: Number,
@@ -35,13 +35,9 @@ const userSchema = new mongoose.Schema({
     default: 0
   },
   lockUntil: {
-    type: Date
+    type: Number
   }
-}, { 
-  timestamps: true, 
-  toJSON: { virtuals: true }, 
-  toObject: { virtuals: true } 
-})
+}, { timestamps: true })
 
 // Virtual property to check if the account is currently locked
 userSchema.virtual('isLocked').get(function() {
