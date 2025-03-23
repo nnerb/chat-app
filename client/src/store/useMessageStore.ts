@@ -32,9 +32,8 @@ interface CachedAIResponses {
 }
 interface UseMessageStoreProps {
   text: string;
-  setText:  (text: string | ((prevText: string) => string)) => void;
+  setText: (text: string | ((prevText: string) => string)) => void;
   messages: MessagesProps[];
-  setMessages: (messages: MessagesProps[]) => void
   cachedMessages: Map<string, CachedMessages>;
   users: IUserSidebar[];
   selectedUser: AuthUser | null;
@@ -73,7 +72,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   setText: (text) => set((state) => ({ text: typeof text === "function" ? text(state.text) : text })),
   messages: [],
   cachedMessages: new Map(),
-  setMessages: (messages) => set({ messages }),
   resetMessages: () => set({ messages: [], selectedUser: null }),
   users: [],
   selectedUser: null,
@@ -291,7 +289,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         const timeB = new Date(b.lastMessage?.timestamp || 0).getTime();
         return timeB - timeA; // Descending order (latest first)
       });
-      return { users: sortedUsers, currentPage: state.currentPage }  
+      return { users: sortedUsers, currentPage: state.currentPage, text: "" }  
     });
 
     try {
