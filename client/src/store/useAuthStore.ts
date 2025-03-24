@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { io } from "socket.io-client";
 import { useMessageStore } from "./useMessageStore";
+import { MessagesProps } from "./types/message-types";
 
 export interface AuthUser {
   _id: string;
@@ -33,6 +34,7 @@ interface AuthState {
   updateProfile: (data: UpdateProfileProps ) => Promise<void>;
   removeProfile: () => Promise<void>
   connectSocket: () => void;
+  setupSocketListeners: (socket: ReturnType<typeof io> | null) => void;
   disconnectSocket: () => void;
   startTyping: (conversationId: string) => void;  // <-- Add this
   stopTyping: (conversationId: string) => void;   // <-- Add this
@@ -173,7 +175,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   connectSocket: () => {
-    const { authUser, socket } = get()
+    const { authUser, socket, setupSocketListeners } = get()
     if (!authUser || socket?.connected) return
     const newSocket = io(BASE_URL, {
       query: {
@@ -187,46 +189,89 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       authUser: state.authUser ? { ...state.authUser, lastSeen: "" } : null,
     }))
 
-    newSocket.on("getOnlineUsers", (userIds) => {
+    setupSocketListeners(newSocket)
+
+  },
+  setupSocketListeners: (socket) => {
+    if (!socket) {
+      console.warn("Socket is not defined, cannot set up listeners!");
+      return
+    }
+    socket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds })
     })
 
-    newSocket.on("messageDelivered", (data) => {
-      useMessageStore.setState((prevState) => {
-        const updatedMessages = prevState.messages.map((msg) => {
-          if (msg.conversationId === data.conversationId && msg.status === 'sent') {
-            return { ...msg, status: data.status }
-          }
-          return msg
-        });
-        return { messages: updatedMessages }
-      })
-    })
+    socket.on("newMessage", (newMessage: MessagesProps) => {
+      const { authUser } = get();
+      const conversation = useMessageStore.getState().conversation;
 
-    newSocket.on("messagesSeen", (data) => {
-      useMessageStore.setState((prevState) => {
-        const updatedMessages = prevState.messages.map((msg) => {
-          if (msg.conversationId === data.conversationId && msg.status === "delivered") {
-            return { ...msg, status: data.status };
-          }
-          return msg;
-        });
-        return { messages: updatedMessages };
+      const userId = authUser?._id
+      // Check if the message is intended for the current user
+      if (newMessage.receiverId !== userId) return;
+  
+      // Determine if the message belongs to the currently viewed conversation
+      const isCurrentConversation = newMessage.conversationId === conversation?._id;
+  
+      useMessageStore.setState((state) => {
+        const conversationId = newMessage.conversationId;
+        const existingCache = state.cachedMessages.get(conversationId);
+  
+        // Update the cache for the conversation
+        const newCachedMessages = new Map(state.cachedMessages);
+        if (existingCache) {
+          const updatedMessages = [...existingCache.messages, newMessage];
+          newCachedMessages.set(conversationId, {
+            ...existingCache,
+            messages: updatedMessages,
+            timestamp: Date.now()
+          });
+        } else {
+          // Create a new cache entry if none exists (though unlikely)
+          newCachedMessages.set(conversationId, {
+            messages: [newMessage],
+            selectedUser: null,
+            hasMoreMessages: null,
+            currentPage: 1,
+            timestamp: Date.now()
+          });
+        }
+  
+        // Update messages state only if it's the current conversation
+        const updatedMessages = isCurrentConversation
+          ? [...state.messages, newMessage]
+          : state.messages;
+  
+        return {
+          messages: updatedMessages,
+          cachedMessages: newCachedMessages,
+        };
       });
     });
 
-     // Listen for typing events
-    newSocket.on("userTyping", ({ senderId }) => {
-      console.log(`🟣 Frontend received 'userTyping' from ${senderId}`);
-      set((state) => ({
-        typingUsers: [...new Set([...state.typingUsers, senderId])],
-      }));
-    });
-
-    newSocket.on("userStoppedTyping", ({ senderId }) => {
-      set((state) => ({
-        typingUsers: state.typingUsers.filter((id) => id !== senderId),
-      }));
+    socket.on("lastMessage", (newMessage: MessagesProps) => {
+      useMessageStore.setState((state) => {
+        const updatedUsers = state.users.map((user) => {
+          if (user.conversationId === newMessage.conversationId) {
+            return {
+              ...user,
+              lastMessage: {
+                content: newMessage.text || "[Image]", // Handle image content if needed
+                sender: newMessage.senderId,
+                timestamp: newMessage.createdAt,
+              },
+            };
+          }
+          return user;  // Ensure all users are returned, not just the updated one
+        });
+        const sortedUsers = updatedUsers.sort((a, b) => {
+          const timeA = new Date(a.lastMessage?.timestamp || 0).getTime();
+          const timeB = new Date(b.lastMessage?.timestamp || 0).getTime();
+          return timeB - timeA; // Descending order (latest first)
+        });
+        return {
+          users: sortedUsers,  // Add the new message to the messages array
+        };
+      });
     });
   },
   disconnectSocket: () => {

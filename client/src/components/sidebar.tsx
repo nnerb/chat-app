@@ -15,8 +15,6 @@ const Sidebar = () => {
     users, 
     getConversation, 
     isUsersLoading, 
-    subscribeToLastMessage,
-    unsubscribeToLastMessage,
   } = useMessageStore();
   const { onlineUsers, authUser } = useAuthStore(); 
 
@@ -29,13 +27,7 @@ const Sidebar = () => {
       await getUsers()
     }
     fetchUsers()
-    console.log("[Sidebar] Subscribing to last message...");
-    subscribeToLastMessage()
-    return () => {
-      console.log("[Sidebar] Unsubscribing to last message...");
-      unsubscribeToLastMessage()
-    }
-  }, [getUsers, subscribeToLastMessage, unsubscribeToLastMessage]);
+  }, [getUsers]);
 
   const filteredUsers = (showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))

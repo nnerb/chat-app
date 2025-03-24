@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { useMessageStore } from "../../../store/useMessageStore";
-import { useParams } from "react-router-dom";
-import { useAuthStore } from "../../../store/useAuthStore";
 import FormInput from "./form-input";
 
 const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState<string | ArrayBuffer | null>(null);
   const { text, isMessagesLoading } = useMessageStore();
-  const { conversationId } = useParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const maxHeight = 120;
@@ -17,7 +14,6 @@ const MessageInput = () => {
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
-
  
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
@@ -32,19 +28,6 @@ const MessageInput = () => {
   useEffect(() => {
     adjustTextareaHeight();
   }, [text]);
-
-
-  useEffect(() => {
-    const { socket } = useAuthStore.getState();
-    if (socket && conversationId) {
-      socket.emit("joinConversation", conversationId);
-    }
-    return () => {
-      if (socket && conversationId) {
-        socket.emit("leaveConversation", conversationId);
-      }
-    };
-  }, [conversationId]);
 
   return (
     <div className="p-4 w-full relative">

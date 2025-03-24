@@ -331,55 +331,95 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       return;
     }
     console.log("[Socket] Subscribing to messages...");
-    socket?.on("newMessage", (newMessage: MessagesProps) => {
-      const userId = useAuthStore.getState().authUser?._id;
-      const { conversation } = get();
-  
-      // Check if the message is intended for the current user
-      if (newMessage.receiverId !== userId) return;
-  
-      // Determine if the message belongs to the currently viewed conversation
-      const isCurrentConversation = newMessage.conversationId === conversation?._id;
-  
-      set((state) => {
-        const conversationId = newMessage.conversationId;
-        const existingCache = state.cachedMessages.get(conversationId);
-  
-        // Update the cache for the conversation
-        const newCachedMessages = new Map(state.cachedMessages);
-        if (existingCache) {
-          const updatedMessages = [...existingCache.messages, newMessage];
-          newCachedMessages.set(conversationId, {
-            ...existingCache,
-            messages: updatedMessages,
-            timestamp: Date.now()
-          });
-        } else {
-          // Create a new cache entry if none exists (though unlikely)
-          newCachedMessages.set(conversationId, {
-            messages: [newMessage],
-            selectedUser: null,
-            hasMoreMessages: null,
-            currentPage: 1,
-            timestamp: Date.now()
-          });
-        }
-  
-        // Update messages state only if it's the current conversation
-        const updatedMessages = isCurrentConversation
-          ? [...state.messages, newMessage]
-          : state.messages;
-  
-        return {
-          messages: updatedMessages,
-          cachedMessages: newCachedMessages,
-        };
+    socket.on("messageDelivered", (data) => {
+      set((prevState) => {
+        const updatedMessages = prevState.messages.map((msg) => {
+          if (msg.conversationId === data.conversationId && msg.status === 'sent') {
+            return { ...msg, status: data.status }
+          }
+          return msg
+        });
+        return { messages: updatedMessages }
+      })
+    })
+
+    socket.on("messagesSeen", (data) => {
+      set((prevState) => {
+        const updatedMessages = prevState.messages.map((msg) => {
+          if (msg.conversationId === data.conversationId && msg.status === "delivered") {
+            return { ...msg, status: data.status };
+          }
+          return msg;
+        });
+        return { messages: updatedMessages };
       });
     });
+
+    // Listen for typing events
+    socket.on("userTyping", ({ senderId }) => {
+      console.log(`🟣 Frontend received 'userTyping' from ${senderId}`);
+      useAuthStore.setState((state) => ({
+        typingUsers: [...new Set([...state.typingUsers, senderId])],
+      }));
+    });
+
+    socket.on("userStoppedTyping", ({ senderId }) => {
+      useAuthStore.setState((state) => ({
+        typingUsers: state.typingUsers.filter((id) => id !== senderId),
+      }));
+    });
+    // socket.on("newMessage", (newMessage: MessagesProps) => {
+    //   const userId = useAuthStore.getState().authUser?._id;
+    //   const { conversation } = get();
+  
+    //   // Check if the message is intended for the current user
+    //   if (newMessage.receiverId !== userId) return;
+  
+    //   // Determine if the message belongs to the currently viewed conversation
+    //   const isCurrentConversation = newMessage.conversationId === conversation?._id;
+  
+    //   set((state) => {
+    //     const conversationId = newMessage.conversationId;
+    //     const existingCache = state.cachedMessages.get(conversationId);
+  
+    //     // Update the cache for the conversation
+    //     const newCachedMessages = new Map(state.cachedMessages);
+    //     if (existingCache) {
+    //       const updatedMessages = [...existingCache.messages, newMessage];
+    //       newCachedMessages.set(conversationId, {
+    //         ...existingCache,
+    //         messages: updatedMessages,
+    //         timestamp: Date.now()
+    //       });
+    //     } else {
+    //       // Create a new cache entry if none exists (though unlikely)
+    //       newCachedMessages.set(conversationId, {
+    //         messages: [newMessage],
+    //         selectedUser: null,
+    //         hasMoreMessages: null,
+    //         currentPage: 1,
+    //         timestamp: Date.now()
+    //       });
+    //     }
+  
+    //     // Update messages state only if it's the current conversation
+    //     const updatedMessages = isCurrentConversation
+    //       ? [...state.messages, newMessage]
+    //       : state.messages;
+  
+    //     return {
+    //       messages: updatedMessages,
+    //       cachedMessages: newCachedMessages,
+    //     };
+    //   });
+    // });
   },
   unsubscribeToMessages: () => {
     const socket = useAuthStore.getState().socket
-    socket?.off("newMessage")
+    socket?.off("messageDelivered")
+    socket?.off("messagesSeen")
+    socket?.off("userTyping")
+    socket?.off("userStoppedTyping")
   },
   subscribeToLastMessage: () => {
     const socket = useAuthStore.getState().socket;
@@ -388,31 +428,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       return;
     }
     console.log("[Socket] Subscribing to last message...");
-    socket?.on("lastMessage", (newMessage: MessagesProps) => {
-      set((state) => {
-        const updatedUsers = state.users.map((user) => {
-          if (user.conversationId === newMessage.conversationId) {
-            return {
-              ...user,
-              lastMessage: {
-                content: newMessage.text || "[Image]", // Handle image content if needed
-                sender: newMessage.senderId,
-                timestamp: newMessage.createdAt,
-              },
-            };
-          }
-          return user;  // Ensure all users are returned, not just the updated one
-        });
-        const sortedUsers = updatedUsers.sort((a, b) => {
-          const timeA = new Date(a.lastMessage?.timestamp || 0).getTime();
-          const timeB = new Date(b.lastMessage?.timestamp || 0).getTime();
-          return timeB - timeA; // Descending order (latest first)
-        });
-        return {
-          users: sortedUsers,  // Add the new message to the messages array
-        };
-      });
-    });
+    
   },
   unsubscribeToLastMessage: () => {
     const socket = useAuthStore.getState().socket

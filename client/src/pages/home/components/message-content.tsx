@@ -16,18 +16,15 @@ const MessageContent = () => {
     fetchMoreMessages,
     currentPage,
     selectedUser,
-    subscribeToMessages,
-    unsubscribeToMessages,
     isSendingMessage
   } = useMessageStore()
-  const { authUser, typingUsers, socket } = useAuthStore();
+  const { authUser, typingUsers } = useAuthStore();
 
   const messageEndRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const observer = useRef<IntersectionObserver | null>(null)
   const { conversationId } = useParams()
   const [isBottom, setIsBottom] = useState(false)
-  
   
   const topMessageRef = useCallback((node: HTMLDivElement) => {
     if (isFetchingMoreMessages) return 
@@ -50,13 +47,7 @@ const MessageContent = () => {
     if (messageEndRef.current && messages) {
       messageEndRef.current.scrollIntoView(); 
     }
-    console.log("[MessageContent] Subscribing to messages...");
-    subscribeToMessages()
-    return () => {
-      console.log("[MessageContent] Unsubscribing to messages...");
-      unsubscribeToMessages()
-    }
-  }, [messages, subscribeToMessages, unsubscribeToMessages]);
+  }, [messages]);
 
   // Observer to detect if the bottom (messageEndRef) is in view
   useEffect(() => {
@@ -80,18 +71,6 @@ const MessageContent = () => {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
-
-  const prevMessagesLengthRef = useRef(messages.length);
-
-  useEffect(() => {
-    // Check if a new message was added while you're at the bottom
-    if (conversationId && socket) {
-      if (messages.length > prevMessagesLengthRef.current) {
-        socket.emit("seenMessage", { conversationId });
-      }
-    }
-    prevMessagesLengthRef.current = messages.length;
-  }, [messages, conversationId, socket]);
 
   if (selectedUser === null) return null;
 

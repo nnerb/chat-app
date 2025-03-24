@@ -14,6 +14,8 @@ const ChatContainer = () => {
     getMessages,
     isMessagesLoading,
     resetMessages,
+    subscribeToMessages,
+    unsubscribeToMessages,
   } = useMessageStore()
   const { socket, authUser } = useAuthStore()
 
@@ -29,6 +31,21 @@ const ChatContainer = () => {
       resetMessages()
     }
   },[conversationId, resetMessages, getMessages, socket, authUser])
+
+
+  useEffect(() => {
+    if (conversationId && socket) {
+      socket.emit("joinConversation", conversationId);
+      subscribeToMessages();
+    }
+    return () => {
+      if (socket && conversationId) {
+        socket.emit("leaveConversation", conversationId);
+        unsubscribeToMessages();
+      }
+    };
+  }, [conversationId, socket, subscribeToMessages, unsubscribeToMessages]);
+  
 
   if (isMessagesLoading) {
     return (

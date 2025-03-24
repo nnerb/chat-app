@@ -59,10 +59,19 @@ io.on("connection", async (socket) => {
       }
     }
   }
+  // io.emit used to send events to all connected clients or broadcasting it
+  io.emit("getOnlineUsers", Object.keys(userSocketMap))
+
+  socket.on("joinConversation", async (conversationId) => {
+    socket.join(conversationId);
+  });
+  
+  socket.on("leaveConversation", (conversationId) => {
+    socket.leave(conversationId);
+  });
 
   socket.on("seenMessage", async ({ conversationId }) => {
     try {
-  
       // Update all messages where the current user is the receiver and status is "delivered"
       const result = await Message.updateMany(
         { conversationId, receiverId: userId, status: "delivered" },
@@ -90,23 +99,9 @@ io.on("connection", async (socket) => {
     }
   });
 
-  socket.on("joinConversation", async (conversationId) => {
-    socket.join(conversationId);
-  });
-  
-  socket.on("leaveConversation", (conversationId) => {
-    socket.leave(conversationId);
-  });
-
-  // io.emit used to send events to all connected clients or broadcasting it
-  io.emit("getOnlineUsers", Object.keys(userSocketMap))
-
    // Listen for typing event
   socket.on("typing", ({ senderId, conversationId }) => {
-    console.log(`🔵 Server received 'typing' event from ${senderId} in conversation ${conversationId}`);
-    // Emit to the correct room
     socket.to(conversationId).emit("userTyping", { senderId });
-    console.log(`🟢Server emitting 'userTyping' to room ${conversationId} with senderId: ${senderId}`);
   });
 
   socket.on("stopTyping", ({ conversationId, senderId }) => {
