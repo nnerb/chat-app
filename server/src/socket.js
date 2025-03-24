@@ -60,6 +60,36 @@ io.on("connection", async (socket) => {
     }
   }
 
+  socket.on("seenMessage", async ({ conversationId }) => {
+    try {
+  
+      // Update all messages where the current user is the receiver and status is "delivered"
+      const result = await Message.updateMany(
+        { conversationId, receiverId: userId, status: "delivered" },
+        { $set: { status: "seen" } }
+      );
+      console.log(`Marked ${result.modifiedCount} messages as seen in conversation ${conversationId}`);
+  
+      // Find the conversation to identify the sender
+      const conversation = await Conversation.findById(conversationId);
+      if (conversation) {
+        const senderId = conversation.participants.find(id => id.toString() !== userId);
+        if (senderId) {
+          const senderSocketId = getReceiverSocketId(senderId.toString());
+          if (senderSocketId) {
+            io.to(senderSocketId).emit("messagesSeen", {
+              conversationId,
+              status: "seen"
+            });
+            console.log(`Notified sender ${senderId} that messages in conversation ${conversationId} are seen.`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error in seenMessage event:", error);
+    }
+  });
+
   socket.on("joinConversation", async (conversationId) => {
     socket.join(conversationId);
   });

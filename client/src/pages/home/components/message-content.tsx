@@ -20,12 +20,14 @@ const MessageContent = () => {
     unsubscribeToMessages,
     isSendingMessage
   } = useMessageStore()
-  const { authUser, typingUsers } = useAuthStore();
+  const { authUser, typingUsers, socket } = useAuthStore();
+
   const messageEndRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const observer = useRef<IntersectionObserver | null>(null)
   const { conversationId } = useParams()
   const [isBottom, setIsBottom] = useState(false)
+  
   
   const topMessageRef = useCallback((node: HTMLDivElement) => {
     if (isFetchingMoreMessages) return 
@@ -78,8 +80,24 @@ const MessageContent = () => {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  const prevMessagesLengthRef = useRef(messages.length);
+
+  useEffect(() => {
+    // Check if a new message was added while you're at the bottom
+    if (conversationId && socket && isBottom) {
+      if (messages.length > prevMessagesLengthRef.current) {
+        socket.emit("seenMessage", { conversationId });
+        scrollToBottom(); // Auto-scroll sa bottom
+      }
+    }
+    prevMessagesLengthRef.current = messages.length;
+  }, [messages, conversationId, socket, isBottom]);
+
+  if (selectedUser === null) return null;
+
   return ( 
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 overflow-x-hidden relative">
+    <div className="flex-1 overflow-y-scroll p-4 space-y-4 overflow-x-hidden relative">
       {isFetchingMoreMessages && (
         <div className="text-center grid place-items-center">
           <Loader2 className="animate-spin" />
@@ -104,19 +122,22 @@ const MessageContent = () => {
                     {message.status === "sent" &&  `Sent ${formatRelativeTime(message.createdAt)}`}
                     {message.status === "delivered" && "Delivered"} 
                     {message.status === "seen" && 
-                    <span className="avatar chat-image h-3 w-3">
-                      <img src={selectedUser?.profilePic || "/avatar.png"} alt={selectedUser?.fullName}/>
+                    <span className="avatar h-4 w-4 rounded-full ">
+                      <img 
+                        src={selectedUser?.profilePic || "/avatar.png"} 
+                        alt={selectedUser?.fullName}
+                        className="rounded-full"
+                      />
                     </span>
                     } 
                   </> 
                 }
-              
               </span>
             </div>
           )}
         </div>
       ))}
-      {!isBottom && (
+      {!isBottom && isMessagesLoading && (
         <button className="grid place-items-center w-full sticky bottom-0 cursor-pointer" onClick={() => scrollToBottom()}>
         {selectedUser && typingUsers.includes(selectedUser?._id) ? (
           <div className="space-x-1 rounded-2xl grid place-items-center sticky bottom-0 w-full">
@@ -130,7 +151,7 @@ const MessageContent = () => {
       </button>
       )}
       <div ref={bottomRef}>
-        {selectedUser && typingUsers.includes(selectedUser?._id) && (
+        {typingUsers.includes(selectedUser._id) && (
           <TypingIndicator selectedUser={selectedUser} />
         )}
       </div>

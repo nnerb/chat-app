@@ -195,7 +195,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useMessageStore.setState((prevState) => {
         const updatedMessages = prevState.messages.map((msg) => {
           if (msg.conversationId === data.conversationId && msg.status === 'sent') {
-            console.log({ ...msg, status: data.status })
             return { ...msg, status: data.status }
           }
           return msg
@@ -203,6 +202,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return { messages: updatedMessages }
       })
     })
+
+    newSocket.on("messagesSeen", (data) => {
+      useMessageStore.setState((prevState) => {
+        const updatedMessages = prevState.messages.map((msg) => {
+          if (msg.conversationId === data.conversationId && msg.status === "delivered") {
+            return { ...msg, status: data.status };
+          }
+          return msg;
+        });
+        return { messages: updatedMessages };
+      });
+    });
 
      // Listen for typing events
     newSocket.on("userTyping", ({ senderId }) => {

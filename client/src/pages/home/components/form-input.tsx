@@ -117,67 +117,67 @@ const FormInput = ({
 
   return ( 
     <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-        <div className="flex-1 flex gap-2 relative items-center">
-          <textarea
-            ref={textareaRef}
-            className="w-full textarea rounded-lg textarea-sm sm:textarea-md 
-            disabled: resize-none !pr-9 min-h-10 placeholder:whitespace-nowrap"
-            placeholder="Type a message..."
-            value={text}
-            onChange={handleTextChange}
-            onBlur={() => {
-              if (stopTypingTimeoutRef.current) {
-                clearTimeout(stopTypingTimeoutRef.current);
-              }
-              if (conversationId) stopTyping(conversationId);
-            }}
-            onKeyDown={handleKeyDown}
-            disabled={isMessagesLoading}
-            rows={1}
-          />
-          {/* Emoji Dropdown */}
-          <div 
-            className={`
-              dropdown dropdown-left dropdown-top absolute
-              top-0 right-0  translate-y-2 hidden sm:block cursor-pointer
-              ${ textareaRef.current && textareaRef.current.scrollHeight > maxHeight 
-                ? "-translate-x-20" : "-translate-x-16" 
-              }
-            `}
-            tabIndex={0}
-          >
-            <Smile />
-            <button className="dropdown-content disabled:btn-disabled" disabled={isMessagesLoading || isSendingMessage}>
-              <EmojiPicker onEmojiClick={handleEmojiClick} theme={Theme.AUTO}  />
-            </button>
-          </div>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            ref={fileInputRef}
-            onChange={handleImageChange}
-            disabled={isMessagesLoading || isSendingMessage}
-          />
-
-          <button
-            type="button"
-            className={`flex btn btn-circle disabled:btn-disabled 
-                     ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isMessagesLoading || isSendingMessage}
-          >
-            <Image size={20} />
-          </button>
-        </div>
-        <button
-          type="submit"
-          className="btn btn-sm btn-circle disabled:btn-disabled"
-          disabled={!text.trim() && !imagePreview || isMessagesLoading}
+      <div className="flex-1 flex gap-2 relative items-center">
+        <textarea
+          ref={textareaRef}
+          className="w-full textarea rounded-lg textarea-sm sm:textarea-md 
+          disabled: resize-none !pr-9 min-h-10 placeholder:whitespace-nowrap"
+          placeholder="Type a message..."
+          value={text}
+          onChange={handleTextChange}
+          onBlur={() => {
+            if (stopTypingTimeoutRef.current) {
+              clearTimeout(stopTypingTimeoutRef.current);
+            }
+            if (conversationId) stopTyping(conversationId);
+          }}
+          onKeyDown={handleKeyDown}
+          disabled={isMessagesLoading}
+          rows={1}
+        />
+        {/* Emoji Dropdown */}
+        <div 
+          className={`
+            dropdown dropdown-left dropdown-top absolute
+            top-0 right-0  translate-y-2 hidden sm:block cursor-pointer
+            ${ textareaRef.current && textareaRef.current.scrollHeight > maxHeight 
+              ? "-translate-x-20" : "-translate-x-16" 
+            }
+          `}
+          tabIndex={0}
         >
-          <Send size={22} />
+          <Smile />
+          <div className="dropdown-content disabled:btn-disabled">
+            <EmojiPicker onEmojiClick={handleEmojiClick} theme={Theme.AUTO}  />
+          </div>
+        </div>
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={fileInputRef}
+          onChange={handleImageChange}
+          disabled={isMessagesLoading || isSendingMessage}
+        />
+
+        <button
+          type="button"
+          className={`flex btn btn-circle disabled:btn-disabled 
+                    ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isMessagesLoading || isSendingMessage}
+        >
+          <Image size={20} />
         </button>
-      </form> 
+      </div>
+      <button
+        type="submit"
+        className="btn btn-sm btn-circle disabled:btn-disabled"
+        disabled={!text.trim() && !imagePreview || isMessagesLoading}
+      >
+        <Send size={22} />
+      </button>
+    </form> 
    );
 }
  

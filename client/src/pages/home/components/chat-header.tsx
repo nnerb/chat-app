@@ -69,7 +69,7 @@ const ChatHeader = () => {
               <p className="text-xs text-base-content/70">
               {onlineUsers.includes(selectedUser?._id || "") 
                 ? "Active now" 
-                : selectedUser?.lastSeen && `Active ${formatRelativeTime(selectedUser?.lastSeen)}`} 
+                : selectedUser?.lastSeen ? `Active ${formatRelativeTime(selectedUser?.lastSeen)}` : "Last seen recently"} 
               </p>
             </>
             }
