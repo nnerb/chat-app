@@ -85,14 +85,13 @@ const MessageContent = () => {
 
   useEffect(() => {
     // Check if a new message was added while you're at the bottom
-    if (conversationId && socket && isBottom) {
+    if (conversationId && socket) {
       if (messages.length > prevMessagesLengthRef.current) {
         socket.emit("seenMessage", { conversationId });
-        scrollToBottom(); // Auto-scroll sa bottom
       }
     }
     prevMessagesLengthRef.current = messages.length;
-  }, [messages, conversationId, socket, isBottom]);
+  }, [messages, conversationId, socket]);
 
   if (selectedUser === null) return null;
 
