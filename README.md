@@ -23,6 +23,7 @@ Yapster is a **real-time chat application** built with **MERN, TypeScript, and S
 - **Mobile-friendly & responsive UI**
 - **Loading states & skeletons** for smooth UX
 - **Emoji** Express yourself with emojis
+- **Read receipts** (see when messages are delivered & read)
 
 ---
 
@@ -141,7 +142,6 @@ npm run dev
 
 - ✅ Group chat feature
 - ✅ Message reactions
-- ✅ Read receipts
 - ✅ Push notifications
 
 ---
