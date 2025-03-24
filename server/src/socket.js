@@ -52,6 +52,7 @@ io.on("connection", async (socket) => {
           io.to(senderSocketId).emit("messageDelivered", {
             message: "Message delivered in conversation " + conversation._id,
             conversationId: conversation._id,
+            status: 'delivered'
           })
           console.log(`Notified sender ${senderId} about delivered messages in conversation ${conversation._id}`);
         }
@@ -69,12 +70,6 @@ io.on("connection", async (socket) => {
 
   // io.emit used to send events to all connected clients or broadcasting it
   io.emit("getOnlineUsers", Object.keys(userSocketMap))
-
-  socket.on("sendMessage", () => {
-    // Notify sender that the message was sent
-    socket.emit("messageSent", { message: "Message sent" });
-    console.log("🔵 Server emitting 'messageSent' event to sender");
-  })
 
    // Listen for typing event
   socket.on("typing", ({ senderId, conversationId }) => {

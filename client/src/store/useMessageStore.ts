@@ -297,10 +297,9 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     set({ isSendingMessage: true })
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-      const { messages, newMessage } : SendMessageProps = res.data
+      const { newMessage } : SendMessageProps = res.data
       set((state) => {
         const updatedMessages = [...state.messages, newMessage]
-        console.log("Messages", messages)
         return { 
             cachedMessages: new Map(state.cachedMessages).set(conversationId, {
             messages: updatedMessages,

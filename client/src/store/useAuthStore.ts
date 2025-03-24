@@ -195,8 +195,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useMessageStore.setState((prevState) => {
         const updatedMessages = prevState.messages.map((msg) => {
           if (msg.conversationId === data.conversationId && msg.status === 'sent') {
-            console.log({ ...msg, status: 'delivered '})
-            return { ...msg, status: 'delivered' }
+            console.log({ ...msg, status: data.status })
+            return { ...msg, status: data.status }
           }
           return msg
         });

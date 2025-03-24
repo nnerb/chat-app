@@ -130,11 +130,9 @@ export const sendMessage = async(req, res) => {
     const { id: chatPartnerId } = req.params
     const currentUserId = req.user._id
 
-
     const conversation = await Conversation.findOne({
       participants: { $all: [currentUserId, chatPartnerId] },
     });
-
 
     let imageUrl;
 
@@ -154,20 +152,27 @@ export const sendMessage = async(req, res) => {
 
     await newMessage.save()
 
+    res.status(201).json({ newMessage })
+
     const receiverSocketId = getReceiverSocketId(chatPartnerId)
     if (receiverSocketId) {
+      newMessage.status = 'delivered' 
+      await newMessage.save()
       io.to(receiverSocketId).emit("newMessage", newMessage)
       io.to(receiverSocketId).emit("lastMessage", newMessage)
       io.to(receiverSocketId).emit('messageReceived', newMessage)
+      // Additionally, notify the sender that the message has been delivered
+      const senderSocketId = getReceiverSocketId(currentUserId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messageDelivered", {
+          conversationId: conversation._id,
+          messageId: newMessage._id,
+          status: 'delivered'
+        });
+      }
     } 
 
-    const messages = await Message.find({ conversationId: conversation._id })
-    .sort({ createdAt: -1 })
-    .limit(10)
-
-    messages.reverse()
-
-    res.status(201).json({ newMessage, messages })
+   
 
   } catch (error) {
     console.log("Error in sendMessage controller", error)

@@ -28,6 +28,5 @@ export interface FetchMoreMessagesProps {
 }
 
 export interface SendMessageProps { 
-  messages: MessagesProps[],
   newMessage: MessagesProps 
 }
