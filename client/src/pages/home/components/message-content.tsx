@@ -137,7 +137,7 @@ const MessageContent = () => {
           )}
         </div>
       ))}
-      {!isBottom && isMessagesLoading && (
+      {!isBottom && !isMessagesLoading && (
         <button className="grid place-items-center w-full sticky bottom-0 cursor-pointer" onClick={() => scrollToBottom()}>
         {selectedUser && typingUsers.includes(selectedUser?._id) ? (
           <div className="space-x-1 rounded-2xl grid place-items-center sticky bottom-0 w-full">
