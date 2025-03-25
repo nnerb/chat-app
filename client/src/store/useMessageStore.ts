@@ -243,18 +243,18 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       const res = await axiosInstance.get(`/messages/${conversationId}`, {
         params: { page: currentPage + 1, limit: 10 },
       });
-      const { messages, hasMore } : FetchMoreMessagesProps = res.data
+      const { messages: newMessages, hasMore } : FetchMoreMessagesProps = res.data
       set((state) => {
-        const mergedMessages = [...messages, ...state.messages];
+        // Create a Set of existing message IDs for fast lookup
+        const existingIds = new Set(state.messages.map(msg => msg._id))
 
-        const dedupedMessages= mergedMessages.reduce<MessagesProps[]>((acc, message) => {
-          if (!acc.find((m) => m._id === message._id)) {
-            acc.push(message);  
-          }
-          return acc;
-        }, []);
+        // Filter out any duplicates from new messages
+        const filteredNewMessages = newMessages.filter(
+          msg => !existingIds.has(msg._id)
+        );
+
         return {
-          messages: dedupedMessages,
+          messages: [...filteredNewMessages, ...state.messages],
           currentPage: currentPage + 1,
           hasMoreMessages: hasMore
         }
@@ -410,7 +410,11 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     });
     socket.on("newMessage", (newMessage: MessagesProps) => {
       const userId = useAuthStore.getState().authUser?._id;
-      const { conversation } = get();
+      const { conversation, messages } = get();
+       // Prevent adding duplicate messages
+      const messageExists = messages.some(msg => msg._id === newMessage._id);
+
+      if (newMessage.senderId === userId || messageExists) return;
   
       // Check if the message is intended for the current user
       if (newMessage.receiverId !== userId) return;

@@ -134,6 +134,9 @@ export const sendMessage = async(req, res) => {
       participants: { $all: [currentUserId, chatPartnerId] },
     });
 
+    if (!conversation) {
+      return res.status(404).json({ success: 'false', message: 'Conversation not found'})
+    }
     let imageUrl;
 
     if (image) {
@@ -158,16 +161,18 @@ export const sendMessage = async(req, res) => {
     if (receiverSocketId) {
       newMessage.status = 'delivered' 
       await newMessage.save()
-      io.to(receiverSocketId).emit("newMessage", newMessage)
-      io.to(receiverSocketId).emit("lastMessage", newMessage)
-      io.to(receiverSocketId).emit('messageReceived', newMessage)
+      const receiverInConversation = conversation.participants.includes(chatPartnerId);
+      if (receiverInConversation) {
+        io.to(receiverSocketId).emit("newMessage", newMessage)
+        io.to(receiverSocketId).emit("lastMessage", newMessage)
+      }
       // Additionally, notify the sender that the message has been delivered
       const senderSocketId = getReceiverSocketId(currentUserId);
       if (senderSocketId) {
         io.to(senderSocketId).emit("messageDelivered", {
           conversationId: conversation._id,
           messageId: newMessage._id,
-          status: 'delivered'
+          status: 'delivered' 
         });
       }
     } 

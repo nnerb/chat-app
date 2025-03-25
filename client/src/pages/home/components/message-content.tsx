@@ -26,6 +26,9 @@ const MessageContent = () => {
   const { conversationId } = useParams()
   const [isBottom, setIsBottom] = useState(false)
   const lastMessageRef = useRef<HTMLDivElement>(null)
+    // Get the last message and its ID
+  const lastMessage = messages[messages.length - 1];
+  const lastMessageId = lastMessage?._id;
   
   const topMessageRef = useCallback((node: HTMLDivElement) => {
     if (isFetchingMoreMessages) return 
@@ -65,33 +68,45 @@ const MessageContent = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    // 1. Safety checks - don't run if missing requirements
+    if (!socket || !conversationId || !lastMessage) return;
+    
+    // 2. Only track messages from OTHER users
+    if (lastMessage.senderId === authUser?._id) return;
   
-  // Function to scroll to the bottom
-  const scrollToBottom = () => {
+    // 3. Get the actual DOM element of last message
+    const lastMessageElement = lastMessageRef.current;
+    if (!lastMessageElement) return;
+  
+    // 4. Create a visibility detector (IntersectionObserver)
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // 5. When 50% of message is visible...
+        if (entry.isIntersecting) {
+          // 6. Tell server we've seen it
+          socket.emit("seenMessage", { conversationId });
+          // 7. Stop watching to prevent duplicate events
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 } // Needs 50% visibility
+    );
+  
+    // 8. Start watching the message
+    observer.observe(lastMessageElement);
+  
+    // 9. Cleanup: Stop watching when component unmounts
+    return () => observer.disconnect();
+  }, [socket, conversationId, lastMessageId, authUser?._id, lastMessage]);
+
+   // Function to scroll to the bottom
+   const scrollToBottom = () => {
     if (lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
-
-  useEffect(() => {
-    if (!socket || !conversationId) return;
-  
-    const lastMessageElement = lastMessageRef.current;
-    if (!lastMessageElement) return;
-  
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          socket.emit("seenMessage", { conversationId });
-        }
-      },
-      { threshold: 1.0 }
-    );
-  
-    observer.observe(lastMessageElement);
-  
-    return () => observer.disconnect();
-  }, [socket, conversationId, messages]); 
 
   if (selectedUser === null) return null;
 
