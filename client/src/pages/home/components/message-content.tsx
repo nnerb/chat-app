@@ -74,15 +74,29 @@ const MessageContent = () => {
   };
 
   useEffect(() => {
-    if (socket) {
-      socket.emit("seenMessage", { conversationId })
-    }
-  },[socket, conversationId])
+    if (!socket || !conversationId) return;
+  
+    const lastMessageElement = lastMessageRef.current;
+    if (!lastMessageElement) return;
+  
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          socket.emit("seenMessage", { conversationId });
+        }
+      },
+      { threshold: 1.0 }
+    );
+  
+    observer.observe(lastMessageElement);
+  
+    return () => observer.disconnect();
+  }, [socket, conversationId, messages]); 
 
   if (selectedUser === null) return null;
 
   return ( 
-    <div className="flex-1 overflow-y-scroll p-4  overflow-x-hidden relative">
+    <div className="flex-1 overflow-y-scroll p-4 space-y-6 overflow-x-hidden relative">
       {isFetchingMoreMessages && (
         <div className="text-center grid place-items-center">
           <Loader2 className="animate-spin" />
@@ -100,7 +114,7 @@ const MessageContent = () => {
           }
           
           {message.senderId === authUser?._id && messages.length - 1 === index && (
-            <div className="chat-header mb-1 absolute right-0 translate-y-9 pt-5 -translate-x-5">
+            <div className="chat-header mb-1 absolute right-0 translate-y-full pt-5 -translate-x-5">
               <span className="text-xs">
                 {isSendingMessage ? 
                   <span className="flex items-center space-x-1">
