@@ -10,9 +10,10 @@ import AIModal from "./ai-modal";
 interface IndividualChatProps {
   message: MessagesProps,
   selectedUser: AuthUser | null
+  lastMessageRef?: React.RefObject<HTMLDivElement>
 }
 
-const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }) => {
+const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser, lastMessageRef }) => {
 
   const { authUser, onlineUsers } = useAuthStore()
   const { generateAIResponse } = useMessageStore()
@@ -33,7 +34,7 @@ const IndividualChat: React.FC<IndividualChatProps> = ({ message, selectedUser }
   }
   return ( 
     <>
-      <div className="chat-image avatar">
+      <div className="chat-image avatar" ref={lastMessageRef}>
         <div className="size-8 md:size-10 rounded-full border">
           <img
             src={

@@ -184,6 +184,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     const cachedData = getFromCache(cachedMessages, conversationId)
 
     if (cachedData) {
+      console.log('CACHED MESSAGES FROM GET MESSAGE: ', cachedData?.messages)
       set({
         messages: cachedData.messages, 
         selectedUser: cachedData.selectedUser,
@@ -300,6 +301,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       const { newMessage } : SendMessageProps = res.data
       set((state) => {
         const updatedMessages = [...state.messages, newMessage]
+        console.log('SEND MESSAGE', updatedMessages)
         return { 
             cachedMessages: new Map(state.cachedMessages).set(conversationId, {
             messages: updatedMessages,
@@ -339,7 +341,26 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
           }
           return msg
         });
-        return { messages: updatedMessages }
+
+        const cached = new Map(prevState.cachedMessages);
+        if (cached.has(data.conversationId)) {
+          const cacheEntry = cached.get(data.conversationId);
+          const updatedCachedMessages: MessagesProps[] = (cacheEntry?.messages || []).map((msg) =>
+            msg.conversationId === data.conversationId && msg.status === "sent"
+              ? { ...msg, status: data.status }
+              : msg
+          );
+          cached.set(data.conversationId, {
+            ...cacheEntry,
+            messages: updatedCachedMessages,
+            timestamp: Date.now(),
+            selectedUser: cacheEntry?.selectedUser || null,
+            hasMoreMessages: cacheEntry?.hasMoreMessages || null,
+            currentPage: cacheEntry?.currentPage || 1
+          });
+        }
+
+        return {  messages: updatedMessages, cachedMessages: cached }
       })
     })
 
@@ -351,7 +372,26 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
           }
           return msg;
         });
-        return { messages: updatedMessages };
+        const cached = new Map(prevState.cachedMessages);
+        if (cached.has(data.conversationId)) {
+          const cacheEntry = cached.get(data.conversationId);
+          const updatedCachedMessages: MessagesProps[] = (cacheEntry?.messages || []).map((msg) =>
+            msg.conversationId === data.conversationId && msg.status === "delivered"
+              ? { ...msg, status: data.status }
+              : msg
+          );
+          
+          cached.set(data.conversationId, {
+            ...cacheEntry,
+            messages: updatedCachedMessages,
+            timestamp: Date.now(),
+            selectedUser: cacheEntry?.selectedUser || null,
+            hasMoreMessages: cacheEntry?.hasMoreMessages || null,
+            currentPage: cacheEntry?.currentPage || 1
+          });
+        }
+
+        return {  messages: updatedMessages, cachedMessages: cached }
       });
     });
 
@@ -368,51 +408,51 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         typingUsers: state.typingUsers.filter((id) => id !== senderId),
       }));
     });
-    // socket.on("newMessage", (newMessage: MessagesProps) => {
-    //   const userId = useAuthStore.getState().authUser?._id;
-    //   const { conversation } = get();
+    socket.on("newMessage", (newMessage: MessagesProps) => {
+      const userId = useAuthStore.getState().authUser?._id;
+      const { conversation } = get();
   
-    //   // Check if the message is intended for the current user
-    //   if (newMessage.receiverId !== userId) return;
+      // Check if the message is intended for the current user
+      if (newMessage.receiverId !== userId) return;
   
-    //   // Determine if the message belongs to the currently viewed conversation
-    //   const isCurrentConversation = newMessage.conversationId === conversation?._id;
+      // Determine if the message belongs to the currently viewed conversation
+      const isCurrentConversation = newMessage.conversationId === conversation?._id;
   
-    //   set((state) => {
-    //     const conversationId = newMessage.conversationId;
-    //     const existingCache = state.cachedMessages.get(conversationId);
+      set((state) => {
+        const conversationId = newMessage.conversationId;
+        const existingCache = state.cachedMessages.get(conversationId);
   
-    //     // Update the cache for the conversation
-    //     const newCachedMessages = new Map(state.cachedMessages);
-    //     if (existingCache) {
-    //       const updatedMessages = [...existingCache.messages, newMessage];
-    //       newCachedMessages.set(conversationId, {
-    //         ...existingCache,
-    //         messages: updatedMessages,
-    //         timestamp: Date.now()
-    //       });
-    //     } else {
-    //       // Create a new cache entry if none exists (though unlikely)
-    //       newCachedMessages.set(conversationId, {
-    //         messages: [newMessage],
-    //         selectedUser: null,
-    //         hasMoreMessages: null,
-    //         currentPage: 1,
-    //         timestamp: Date.now()
-    //       });
-    //     }
+        // Update the cache for the conversation
+        const newCachedMessages = new Map(state.cachedMessages);
+        if (existingCache) {
+          const updatedMessages = [...existingCache.messages, newMessage];
+          newCachedMessages.set(conversationId, {
+            ...existingCache,
+            messages: updatedMessages,
+            timestamp: Date.now()
+          });
+        } else {
+          // Create a new cache entry if none exists (though unlikely)
+          newCachedMessages.set(conversationId, {
+            messages: [newMessage],
+            selectedUser: null,
+            hasMoreMessages: null,
+            currentPage: 1,
+            timestamp: Date.now()
+          });
+        }
   
-    //     // Update messages state only if it's the current conversation
-    //     const updatedMessages = isCurrentConversation
-    //       ? [...state.messages, newMessage]
-    //       : state.messages;
+        // Update messages state only if it's the current conversation
+        const updatedMessages = isCurrentConversation
+          ? [...state.messages, newMessage]
+          : state.messages;
   
-    //     return {
-    //       messages: updatedMessages,
-    //       cachedMessages: newCachedMessages,
-    //     };
-    //   });
-    // });
+        return {
+          messages: updatedMessages,
+          cachedMessages: newCachedMessages,
+        };
+      });
+    });
   },
   unsubscribeToMessages: () => {
     const socket = useAuthStore.getState().socket

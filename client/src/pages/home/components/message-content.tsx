@@ -18,13 +18,14 @@ const MessageContent = () => {
     selectedUser,
     isSendingMessage
   } = useMessageStore()
-  const { authUser, typingUsers } = useAuthStore();
+  const { authUser, typingUsers, socket } = useAuthStore();
 
   const messageEndRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const observer = useRef<IntersectionObserver | null>(null)
   const { conversationId } = useParams()
   const [isBottom, setIsBottom] = useState(false)
+  const lastMessageRef = useRef<HTMLDivElement>(null)
   
   const topMessageRef = useCallback((node: HTMLDivElement) => {
     if (isFetchingMoreMessages) return 
@@ -67,15 +68,21 @@ const MessageContent = () => {
   
   // Function to scroll to the bottom
   const scrollToBottom = () => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  useEffect(() => {
+    if (socket) {
+      socket.emit("seenMessage", { conversationId })
+    }
+  },[socket, conversationId])
 
   if (selectedUser === null) return null;
 
   return ( 
-    <div className="flex-1 overflow-y-scroll p-4 space-y-4 overflow-x-hidden relative">
+    <div className="flex-1 overflow-y-scroll p-4  overflow-x-hidden relative">
       {isFetchingMoreMessages && (
         <div className="text-center grid place-items-center">
           <Loader2 className="animate-spin" />
@@ -87,12 +94,16 @@ const MessageContent = () => {
           className={`chat ${message.senderId === authUser?._id ? "chat-end" : "chat-start"}`}
           ref={index === 0 ? topMessageRef : messageEndRef} // Use refs only when needed
         >
-          <IndividualChat message={message} selectedUser={selectedUser} />
+          {messages.length - 1 === index 
+            ? <IndividualChat message={message} selectedUser={selectedUser} lastMessageRef={lastMessageRef} /> 
+            : <IndividualChat message={message} selectedUser={selectedUser} /> 
+          }
+          
           {message.senderId === authUser?._id && messages.length - 1 === index && (
-            <div className="chat-header mb-1 absolute right-0 translate-y-full pt-5 -translate-x-5">
+            <div className="chat-header mb-1 absolute right-0 translate-y-9 pt-5 -translate-x-5">
               <span className="text-xs">
                 {isSendingMessage ? 
-                  <span className="inline-flex items-center space-x-1">
+                  <span className="flex items-center space-x-1">
                   <p>Sending...</p>
                   <Loader2 className="animate-spin h-3 w-3"/>
                   </span> :  
