@@ -1,6 +1,6 @@
 import axios from "axios";
 import { create } from "zustand";
-import { axiosInstance } from "../lib/axios";
+import { axiosInstance } from "../lib/api/client";
 import toast from "react-hot-toast";
 import { AuthUser, useAuthStore } from "./useAuthStore";
 import { AIGeneratedResponseProps, MessageDataProps } from "../types";

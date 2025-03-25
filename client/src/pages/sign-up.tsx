@@ -1,10 +1,10 @@
 import { FormEvent, useState } from "react";
-import { useAuthStore } from "../store/useAuthStore";
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare, User } from "lucide-react";
 import toast from "react-hot-toast";
 import { FormDataProps } from "../types";
 import AuthImagePattern from "../components/skeletons/auth-image-pattern";
 import { Link } from "react-router-dom";
+import { useSignup } from "../features/auth/hooks";
 
 const SignUpPage = () => {
 
@@ -15,7 +15,7 @@ const SignUpPage = () => {
     password: "",
   })
 
-  const { signup, isSigningUp } = useAuthStore()
+  const { mutate: signup, isPending } = useSignup()
 
   const validateForm = () => {
     if (!formData.fullName.trim()) return toast.error("Name is required");
@@ -113,8 +113,8 @@ const SignUpPage = () => {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary w-full" disabled={isSigningUp}>
-              {isSigningUp ? (
+            <button type="submit" className="btn btn-primary w-full" disabled={isPending}>
+              {isPending ? (
                 <>
                   <Loader2 className="size-5 animate-spin" />
                   Loading...

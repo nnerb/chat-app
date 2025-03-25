@@ -1,9 +1,8 @@
 import { FormEvent, useState } from "react";
-import { useAuthStore } from "../store/useAuthStore";
-
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
 import AuthImagePattern from "../components/skeletons/auth-image-pattern";
+import { useLogin } from "../features/auth/hooks";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,7 +10,8 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
-  const { login, isLoggingIn } = useAuthStore();
+
+  const { mutate: login, isPending } = useLogin();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -80,8 +80,8 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary w-full" disabled={isLoggingIn}>
-              {isLoggingIn ? (
+            <button type="submit" className="btn btn-primary w-full" disabled={isPending}>
+              {isPending ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
                   Loading...

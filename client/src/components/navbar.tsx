@@ -1,9 +1,19 @@
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { LogOut, MessageSquare, Settings, User } from "lucide-react";
+import { useLogout } from "../features/auth/hooks";
 
 const Navbar = () => {
-  const { logout, authUser, isUpdatingProfile } = useAuthStore();
+  const { authUser, isUpdatingProfile } = useAuthStore();
+  const { mutate: logout, isPending } = useLogout()
+
+  console.log({ authUser })
+
+  const handleLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    if (!authUser) return
+    logout(authUser._id)
+  }
 
   return (
     <header
@@ -46,7 +56,11 @@ const Navbar = () => {
                   <span className="hidden sm:inline">Profile</span>
                 </Link>
 
-                <button className="flex gap-2 items-center disabled:btn-disabled" onClick={logout} disabled={isUpdatingProfile}>
+                <button 
+                  className="flex gap-2 items-center disabled:btn-disabled cursor-pointer" 
+                  onClick={handleLogout}
+                  disabled={isUpdatingProfile || isPending}
+                >
                   <LogOut className="size-5" />
                   <span className="hidden sm:inline">Logout</span>
                 </button>

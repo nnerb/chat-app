@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { axiosInstance } from "../lib/axios";
-import { FormDataProps, LoginDataProps, UpdateProfileProps } from "../types";
+import { axiosInstance } from "../lib/api/client";
+import { UpdateProfileProps } from "../types";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { io } from "socket.io-client";
@@ -19,18 +19,13 @@ export interface AuthUser {
 
 interface AuthState {
   authUser: AuthUser | null;
-  isSigningUp: boolean;
-  isLoggingIn: boolean;
-  isLoggingOut: boolean;
+  setAuthUser: (user: AuthUser | null) => void;
   isUpdatingProfile: boolean;
   isCheckingAuth: boolean;
   onlineUsers: string[]
   socket: ReturnType<typeof io> | null
   typingUsers: string[]
   checkAuth: () => Promise<void>;
-  signup: (data: FormDataProps) => Promise<void>;
-  logout: () => Promise<void>;
-  login: (data: LoginDataProps) => Promise<void>;
   updateProfile: (data: UpdateProfileProps ) => Promise<void>;
   removeProfile: () => Promise<void>
   connectSocket: () => void;
@@ -44,9 +39,7 @@ export const BASE_URL = import.meta.env.MODE === "development" ? "http://localho
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   authUser: null,
-  isSigningUp: false,
-  isLoggingIn: false,
-  isLoggingOut: false,
+  setAuthUser: (user) => set({ authUser: user }),
   isUpdatingProfile: false,
   isCheckingAuth: true,
   onlineUsers: [],
@@ -66,74 +59,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false })
-    }
-  },
-  signup: async (data) => {
-    set({ isSigningUp: true });
-    try {
-      const res = await axiosInstance.post("/auth/signup", data);
-      set({ authUser: res.data });
-      toast.success("Account created successfully");
-      get().connectSocket()
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        // Narrowing the type of error to AxiosError
-        const errorMessage = error.response?.data?.message || 'An error occurred during signup';
-        toast.error(errorMessage);
-      } else {
-        // Handle non-Axios errors
-        toast.error('An unexpected error occurred');
-      }
-    } finally {
-      set({ isSigningUp: false });
-    }
-  },
-  logout: async () => {
-    set({ isLoggingOut: true });
-    try {
-      const { authUser } = get()
-      await axiosInstance.post(`/auth/logout/${authUser?._id}`)
-      useMessageStore.setState({
-        cachedAIResponses: new Map(),
-        cachedConversation: new Map(),
-        cachedMessages: new Map(),
-        cachedUsers: new Map(),
-      })
-      set({ 
-        authUser: null,
-      })
-      get().disconnectSocket()
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        // Narrowing the type of error to AxiosError
-        const errorMessage = error.response?.data?.message || 'An error occurred during signup';
-        toast.error(errorMessage);
-      } else {
-        // Handle non-Axios errors
-        toast.error('An unexpected error occurred');
-      }
-    } finally {
-      set({ isLoggingOut: false });
-    }
-  },
-  login: async (data) => {
-    set({ isLoggingIn: true });
-    try {
-      const res = await axiosInstance.post("/auth/login", data);
-      set({ authUser: res.data });
-      get().connectSocket()
-      toast.success("Logged in successfully");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        // Narrowing the type of error to AxiosError
-        const errorMessage = error.response?.data?.message || 'An error occurred during login';
-        toast.error(errorMessage);
-      } else {
-        // Handle non-Axios errors
-        toast.error('An unexpected error occurred');
-      }
-    } finally {
-      set({ isLoggingIn: false });
     }
   },
   updateProfile: async (data) => {
