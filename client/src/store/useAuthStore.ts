@@ -6,6 +6,7 @@ import axios from "axios";
 import { io } from "socket.io-client";
 import { useMessageStore } from "./useMessageStore";
 import { MessagesProps } from "./types/message-types";
+import { APIError } from "../lib/api/errorHandler";
 
 export interface AuthUser {
   _id: string;
@@ -22,6 +23,8 @@ interface AuthState {
   setAuthUser: (user: AuthUser | null) => void;
   isUpdatingProfile: boolean;
   isCheckingAuth: boolean;
+  isLoggingOut: boolean;
+  setIsLoggingOut: (status: boolean) => void;
   onlineUsers: string[]
   socket: ReturnType<typeof io> | null
   typingUsers: string[]
@@ -41,17 +44,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   authUser: null,
   setAuthUser: (user) => set({ authUser: user }),
   isUpdatingProfile: false,
-  isCheckingAuth: true,
+  isCheckingAuth: false,
+  isLoggingOut: false,
+  setIsLoggingOut: (status) => set({ isLoggingOut: status }),
   onlineUsers: [],
   socket: null,
   typingUsers: [],
   checkAuth: async () => {
+    set({ isCheckingAuth: true })
     try {
       const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data })
       get().connectSocket()
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
+      if (error as APIError ) {
         console.warn("User is not logged in.");
       } else {
         console.error("Unexpected error during auth check:", error);

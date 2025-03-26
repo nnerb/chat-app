@@ -188,6 +188,9 @@ export const removeProfilePic = async (req, res) => {
 
 export const checkAuth = (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "Not authenticated" }); // <-- Return 401 if no session
+    }
     res.status(200).json(req.user)
   } catch (error) {
     console.log("Error in check auth controller", error)

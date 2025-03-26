@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { handleAPIError } from "./errorHandler";
 
 export const axiosInstance = axios.create({
@@ -8,8 +8,9 @@ export const axiosInstance = axios.create({
 
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
+  (error: AxiosError) => {
     const apiError = handleAPIError(error);
+    apiError.response = error.response
     return Promise.reject(apiError);
   }
 );

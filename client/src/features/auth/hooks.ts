@@ -40,9 +40,10 @@ export const useSignup = () => {
 };
 
 export const useLogout = () => {
-  const { disconnectSocket, setAuthUser } = useAuthStore.getState()
+  const { disconnectSocket, setAuthUser, setIsLoggingOut } = useAuthStore.getState()
   const queryClient = useQueryClient();
   return useMutation({
+    onMutate: () => setIsLoggingOut(true),
     mutationFn: authAPI.logout,
     onSuccess: () => {
       disconnectSocket();
@@ -52,5 +53,6 @@ export const useLogout = () => {
     onError: (error: APIError) => {
       toast.error(error.message);
     },
+    onSettled: () => setIsLoggingOut(false)
   });
 };

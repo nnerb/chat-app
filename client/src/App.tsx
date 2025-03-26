@@ -16,10 +16,11 @@ import NotFound from "./components/not-found";
 import ChatHeader from "./pages/home/components/chat-header";
 import MessageSkeleton from "./components/skeletons/message-skeleton";
 import MessageInput from "./pages/home/components/message-input";
+import ProtectedRoute from "./protected-route";
 
 const App = () => {
 
-  const { authUser, checkAuth, isCheckingAuth } = useAuthStore()
+  const { authUser, checkAuth, isCheckingAuth, isLoggingOut } = useAuthStore()
   const { validConversationId, isMessagesLoading  } = useMessageStore()
   const { theme } = useThemeStore()
 
@@ -28,53 +29,37 @@ const App = () => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [checkAuth, theme])
 
-  if (isCheckingAuth && !authUser) return <Loading />
+  if (isCheckingAuth && !authUser || isLoggingOut) return <Loading />
 
   return ( 
     <div data-theme={theme} className="w-full min-h-screen">
       <Navbar />
       <Routes>
-        <Route 
-          path="messages" 
-          element={authUser ? <HomePage /> : <Navigate to="/login"/>}
-        >
-          <Route index element={<NoChatSelected />}/>
-          <Route path=":conversationId" element={
-            validConversationId 
-            ? <ChatContainer /> 
-            : isMessagesLoading 
-            ? <div className="flex-1 flex flex-col">
-                <ChatHeader />
-                <MessageSkeleton />
-                <MessageInput />
-              </div> 
-            : <NotFound /> 
-          }/>
+        <Route element={<ProtectedRoute />}>
+          <Route path="messages" element={<HomePage />}>
+            <Route index element={<NoChatSelected />} />
+            <Route 
+              path=":conversationId" 
+              element={
+                validConversationId 
+                  ? <ChatContainer /> 
+                  : isMessagesLoading 
+                  ? <div className="flex-1 flex flex-col">
+                      <ChatHeader />
+                      <MessageSkeleton />
+                      <MessageInput />
+                    </div> 
+                  : <NotFound />
+              }
+            />
+          </Route>
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
-        <Route 
-          path="/messages/:conversationId" 
-          element={authUser ? <HomePage /> : <Navigate to="/login"/>}
-        />
-        <Route 
-          path="/signup" 
-          element={!authUser ? <SignUpPage /> : <Navigate to="/messages"/>}
-        />
-        <Route 
-          path="/login" 
-          element={!authUser ? <LoginPage /> : <Navigate to="/messages"/>}
-        />
-        <Route 
-          path="/profile" 
-          element={authUser ? <ProfilePage /> : <Navigate to="/login"/>}
-        />
-        <Route 
-          path="/settings" 
-          element={<SettingsPage/>}
-        />
-        <Route 
-          path="*" 
-          element={<Navigate to="/messages" />}
-        />
+        {/* Public Routes */}
+        <Route path="signup" element={!authUser ? <SignUpPage /> : <Navigate to="/messages" />} />
+        <Route path="login" element={!authUser ? <LoginPage /> : <Navigate to="/messages" />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="*" element={<Navigate to="/messages" />} />
       </Routes>
     </div>
    );

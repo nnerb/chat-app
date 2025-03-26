@@ -7,8 +7,6 @@ const Navbar = () => {
   const { authUser, isUpdatingProfile } = useAuthStore();
   const { mutate: logout, isPending } = useLogout()
 
-  console.log({ authUser })
-
   const handleLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     if (!authUser) return
