@@ -120,6 +120,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       authUser: state.authUser ? { ...state.authUser, lastSeen: "" } : null,
     }))
 
+    console.log('SCOKETTT CALLED')
+
     setupSocketListeners(newSocket)
 
   },

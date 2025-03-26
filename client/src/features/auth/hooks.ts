@@ -11,8 +11,8 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: authAPI.login,
     onSuccess: (user) => {
-      connectSocket();
       setAuthUser(user)
+      connectSocket();
       queryClient.setQueryData(['auth'], user);
       toast.success('Logged in successfully');
     },
@@ -28,8 +28,8 @@ export const useSignup = () => {
   return useMutation({
     mutationFn: authAPI.signup,
     onSuccess: (user) => {
-      connectSocket();
       setAuthUser(user)
+      connectSocket();
       queryClient.setQueryData(['auth'], user);
       toast.success('Account created successfully');
     },
@@ -46,9 +46,9 @@ export const useLogout = () => {
     onMutate: () => setIsLoggingOut(true),
     mutationFn: authAPI.logout,
     onSuccess: () => {
-      disconnectSocket();
       setAuthUser(null)
       queryClient.removeQueries({ queryKey: ['auth'] })
+      disconnectSocket();
     },
     onError: (error: APIError) => {
       toast.error(error.message);
