@@ -7,6 +7,7 @@ import { io } from "socket.io-client";
 import { useMessageStore } from "./useMessageStore";
 import { MessagesProps } from "./types/message-types";
 import { APIError } from "../lib/api/errorHandler";
+import { NewConversationProps } from "./types/conversation-types";
 
 export interface AuthUser {
   _id: string;
@@ -126,15 +127,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.warn("Socket is not defined, cannot set up listeners!");
       return
     }
-    socket.on("getOnlineUsers", (userIds) => {
+    socket.on("getOnlineUsers", (userIds: string[]) => {
       set({ onlineUsers: userIds })
     })
 
-    socket.on("newMessage", (newMessage: MessagesProps) => {
-      const { authUser } = get();
-      const conversation = useMessageStore.getState().conversation;
+    socket.on("newConversation", ({ conversation, senderId } : NewConversationProps) => {
+      useMessageStore.setState((state) => {
+       const updatedUsers =  state.users.map((user) => {
+          if (user._id === senderId) {
+            return {
+              ...user,
+              conversationId: conversation._id
+            }
+          }
+          return user
+        })
+        return { users: updatedUsers }
+      })
+    });
 
-      const userId = authUser?._id
+    socket.on("newMessage", (newMessage: MessagesProps) => {
+      const userId = useAuthStore.getState().authUser?._id;
+      const { conversation, messages } = useMessageStore.getState();
+       // Prevent adding duplicate messages
+      const messageExists = messages.some(msg => msg._id === newMessage._id);
+
+      if (newMessage.senderId === userId || messageExists) return;
+  
       // Check if the message is intended for the current user
       if (newMessage.receiverId !== userId) return;
   
@@ -155,14 +174,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             timestamp: Date.now()
           });
         } else {
-          // Create a new cache entry if none exists (though unlikely)
-          newCachedMessages.set(conversationId, {
-            messages: [newMessage],
-            selectedUser: null,
-            hasMoreMessages: null,
-            currentPage: 1,
-            timestamp: Date.now()
-          });
+          return { messages: isCurrentConversation
+            ? [...state.messages, newMessage]
+            : state.messages }
         }
   
         // Update messages state only if it's the current conversation

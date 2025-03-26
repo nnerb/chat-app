@@ -15,3 +15,8 @@ export interface ConversationResponse {
   currentPage: number,
   hasMore: boolean,
 }
+
+export interface NewConversationProps {
+  conversation: ConversationProps;
+  senderId: string;
+}

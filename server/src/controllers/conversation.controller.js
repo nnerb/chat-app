@@ -1,5 +1,5 @@
 import Conversation from "../models/conversation.model.js";
-
+import { getReceiverSocketId, io } from "../socket.js";
 
 export const getConversation = async (req, res) => {
   try {
@@ -15,6 +15,13 @@ export const getConversation = async (req, res) => {
         participants: [currentUserId, chatPartnerId],
       });
       await conversation.save();
+      const receiverSocketId = getReceiverSocketId(chatPartnerId)
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("newConversation", {
+          conversation,
+          senderId: req.user._id,
+        });
+      } 
     }
 
     await conversation.populate("participants", "fullName profilePic")

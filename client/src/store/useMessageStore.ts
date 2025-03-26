@@ -404,55 +404,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         typingUsers: state.typingUsers.filter((id) => id !== senderId),
       }));
     });
-    socket.on("newMessage", (newMessage: MessagesProps) => {
-      const userId = useAuthStore.getState().authUser?._id;
-      const { conversation, messages } = get();
-       // Prevent adding duplicate messages
-      const messageExists = messages.some(msg => msg._id === newMessage._id);
-
-      if (newMessage.senderId === userId || messageExists) return;
-  
-      // Check if the message is intended for the current user
-      if (newMessage.receiverId !== userId) return;
-  
-      // Determine if the message belongs to the currently viewed conversation
-      const isCurrentConversation = newMessage.conversationId === conversation?._id;
-  
-      set((state) => {
-        const conversationId = newMessage.conversationId;
-        const existingCache = state.cachedMessages.get(conversationId);
-  
-        // Update the cache for the conversation
-        const newCachedMessages = new Map(state.cachedMessages);
-        if (existingCache) {
-          const updatedMessages = [...existingCache.messages, newMessage];
-          newCachedMessages.set(conversationId, {
-            ...existingCache,
-            messages: updatedMessages,
-            timestamp: Date.now()
-          });
-        } else {
-          // Create a new cache entry if none exists (though unlikely)
-          newCachedMessages.set(conversationId, {
-            messages: [newMessage],
-            selectedUser: null,
-            hasMoreMessages: null,
-            currentPage: 1,
-            timestamp: Date.now()
-          });
-        }
-  
-        // Update messages state only if it's the current conversation
-        const updatedMessages = isCurrentConversation
-          ? [...state.messages, newMessage]
-          : state.messages;
-  
-        return {
-          messages: updatedMessages,
-          cachedMessages: newCachedMessages,
-        };
-      });
-    });
   },
   unsubscribeToMessages: () => {
     const socket = useAuthStore.getState().socket
