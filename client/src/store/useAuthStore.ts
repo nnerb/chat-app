@@ -119,11 +119,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useAuthStore.setState((state) => ({
       authUser: state.authUser ? { ...state.authUser, lastSeen: "" } : null,
     }))
-
-    console.log('SCOKETTT CALLED')
-
     setupSocketListeners(newSocket)
-
   },
   setupSocketListeners: (socket) => {
     if (!socket) {
@@ -223,7 +219,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   startTyping: (conversationId) => {
     const { socket, authUser } = get();
     if (socket && authUser) {
-      console.log("Emitting 'typing' event for:", conversationId);
+      // console.log("Emitting 'typing' event for:", conversationId);
       socket.emit("typing", { senderId: authUser._id, conversationId });
     }
   },

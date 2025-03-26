@@ -184,7 +184,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     const cachedData = getFromCache(cachedMessages, conversationId)
 
     if (cachedData) {
-      console.log('CACHED MESSAGES FROM GET MESSAGE: ', cachedData?.messages)
       set({
         messages: cachedData.messages, 
         selectedUser: cachedData.selectedUser,
@@ -301,7 +300,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       const { newMessage } : SendMessageProps = res.data
       set((state) => {
         const updatedMessages = [...state.messages, newMessage]
-        console.log('SEND MESSAGE', updatedMessages)
         return { 
             cachedMessages: new Map(state.cachedMessages).set(conversationId, {
             messages: updatedMessages,
@@ -329,10 +327,8 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   subscribeToMessages: () => {
     const socket = useAuthStore.getState().socket;
     if (!socket) {
-      console.log("[Socket] No socket connection found");
       return;
     }
-    console.log("[Socket] Subscribing to messages...");
     socket.on("messageDelivered", (data) => {
       set((prevState) => {
         const updatedMessages = prevState.messages.map((msg) => {
@@ -397,7 +393,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
 
     // Listen for typing events
     socket.on("userTyping", ({ senderId }) => {
-      console.log(`🟣 Frontend received 'userTyping' from ${senderId}`);
+      // console.log(`🟣 Frontend received 'userTyping' from ${senderId}`);
       useAuthStore.setState((state) => ({
         typingUsers: [...new Set([...state.typingUsers, senderId])],
       }));
