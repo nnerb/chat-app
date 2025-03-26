@@ -26,8 +26,11 @@ const App = () => {
 
   useEffect(() => {
     checkAuth()
+  }, [checkAuth])
+
+  useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-  }, [checkAuth, theme])
+  }, [ theme])
 
   if (isCheckingAuth && !authUser || isLoggingOut) return <Loading />
 
