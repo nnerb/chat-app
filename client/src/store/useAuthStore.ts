@@ -151,37 +151,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { conversation, messages } = useMessageStore.getState();
        // Prevent adding duplicate messages
       const messageExists = messages.some(msg => msg._id === newMessage._id);
-
-      if (newMessage.senderId === userId || messageExists) return;
-  
-      // Check if the message is intended for the current user
-      if (newMessage.receiverId !== userId) return;
-  
+      if (newMessage.senderId === userId || newMessage.receiverId !== userId || messageExists) return;
+      
       // Determine if the message belongs to the currently viewed conversation
       const isCurrentConversation = newMessage.conversationId === conversation?._id;
   
       useMessageStore.setState((state) => {
         const conversationId = newMessage.conversationId;
         const existingCache = state.cachedMessages.get(conversationId);
-  
-        // Update the cache for the conversation
         const newCachedMessages = new Map(state.cachedMessages);
+
+        let updateMessages = state.messages;
         if (existingCache) {
-          const updatedMessages = [...existingCache.messages, newMessage];
           newCachedMessages.set(conversationId, {
             ...existingCache,
-            messages: updatedMessages,
+            messages: [...existingCache.messages, newMessage],
             timestamp: Date.now()
           });
+          if (isCurrentConversation) {
+            updateMessages = [...state.messages, newMessage]
+          }
         } else {
-          return { messages: isCurrentConversation
-            ? [...state.messages, newMessage]
-            : state.messages }
+          return { messages: isCurrentConversation ? updateMessages : state.messages }
         }
   
         // Update messages state only if it's the current conversation
         const updatedMessages = isCurrentConversation
-          ? [...state.messages, newMessage]
+          ? updateMessages
           : state.messages;
   
         return {
