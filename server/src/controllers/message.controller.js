@@ -163,8 +163,14 @@ export const sendMessage = async(req, res) => {
       await newMessage.save()
       const receiverInConversation = conversation.participants.includes(chatPartnerId);
       if (receiverInConversation) {
-        io.to(receiverSocketId).emit("newMessage", newMessage)
-        io.to(receiverSocketId).emit("lastMessage", newMessage)
+        io.to(receiverSocketId).emit("messageUpdate", {
+          newMessage,
+          lastMessage: {
+            content: newMessage.text || "[Image]",
+            sender: newMessage.senderId,
+            timestamp: newMessage.createdAt
+          }
+        })
       }
       // Additionally, notify the sender that the message has been delivered
       const senderSocketId = getReceiverSocketId(currentUserId);

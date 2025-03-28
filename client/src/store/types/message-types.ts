@@ -30,3 +30,8 @@ export interface FetchMoreMessagesProps {
 export interface SendMessageProps { 
   newMessage: MessagesProps 
 }
+
+export interface MessageUpdateProps {
+  newMessage: MessagesProps;
+  lastMessage: ILastMessage | null
+}

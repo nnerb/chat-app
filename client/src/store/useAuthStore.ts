@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { io } from "socket.io-client";
 import { useMessageStore } from "./useMessageStore";
-import { MessagesProps } from "./types/message-types";
+import { MessageUpdateProps } from "./types/message-types";
 import { APIError } from "../lib/api/errorHandler";
 import { NewConversationProps } from "./types/conversation-types";
 
@@ -146,69 +146,75 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       })
     });
 
-    socket.on("newMessage", (newMessage: MessagesProps) => {
-      const userId = useAuthStore.getState().authUser?._id;
+    socket.on("messageUpdate", ({ newMessage, lastMessage } : MessageUpdateProps) => {
       const { conversation, messages } = useMessageStore.getState();
-       // Prevent adding duplicate messages
+      const { authUser } = useAuthStore.getState();
+      if (!authUser) return
+
+      const userId = authUser._id
       const messageExists = messages.some(msg => msg._id === newMessage._id);
+
       if (newMessage.senderId === userId || newMessage.receiverId !== userId || messageExists) return;
-      
-      // Determine if the message belongs to the currently viewed conversation
+
+      const conversationId = newMessage.conversationId;
       const isCurrentConversation = newMessage.conversationId === conversation?._id;
-  
-      useMessageStore.setState((state) => {
-        const conversationId = newMessage.conversationId;
-        const existingCache = state.cachedMessages.get(conversationId);
-        const newCachedMessages = new Map(state.cachedMessages);
 
-        let updateMessages = state.messages;
-        if (existingCache) {
-          newCachedMessages.set(conversationId, {
-            ...existingCache,
-            messages: [...existingCache.messages, newMessage],
-            timestamp: Date.now()
-          });
-          if (isCurrentConversation) {
-            updateMessages = [...state.messages, newMessage]
-          }
-        } else {
-          return { messages: isCurrentConversation ? updateMessages : state.messages }
-        }
-  
-        // Update messages state only if it's the current conversation
-        const updatedMessages = isCurrentConversation
-          ? updateMessages
-          : state.messages;
-  
-        return {
-          messages: updatedMessages,
-          cachedMessages: newCachedMessages,
-        };
-      });
-    });
-
-    socket.on("lastMessage", (newMessage: MessagesProps) => {
-      useMessageStore.setState((state) => {
+      useMessageStore.setState((state) => {       
         const updatedUsers = state.users.map((user) => {
-          if (user.conversationId === newMessage.conversationId) {
-            return {
-              ...user,
-              lastMessage: {
-                content: newMessage.text || "[Image]", // Handle image content if needed
-                sender: newMessage.senderId,
-                timestamp: newMessage.createdAt,
-              },
-            };
+          if (user.conversationId === conversationId) {
+            return { ...user, lastMessage };
           }
-          return user;  // Ensure all users are returned, not just the updated one
+          return user;
         });
+
         const sortedUsers = updatedUsers.sort((a, b) => {
           const timeA = new Date(a.lastMessage?.timestamp || 0).getTime();
           const timeB = new Date(b.lastMessage?.timestamp || 0).getTime();
           return timeB - timeA; // Descending order (latest first)
         });
+
+        const existingUsersCache = state.cachedUsers.get(userId)
+        const newUsersCache = new Map(state.cachedUsers)
+
+        const updatedUsersCache = existingUsersCache?.users.map((user) => {
+          if (newMessage.receiverId === user._id) {
+            return { ...user, timestamp: new Date() }
+          }
+          return user
+        })
+
+        if (existingUsersCache) {
+          newUsersCache.set(userId, {
+            users: updatedUsersCache || [],
+            timestamp: Date.now()
+          })
+        } 
+
+        const existingMessagesCache = state.cachedMessages.get(conversationId);
+        const newMesssagesCache = new Map(state.cachedMessages);
+        let updatedConversationMessages  = state.messages;
+
+        if (existingMessagesCache) {
+          newMesssagesCache.set(conversationId, {
+            ...existingMessagesCache,
+            messages: [...existingMessagesCache.messages, newMessage],
+            timestamp: Date.now()
+          });
+          if (isCurrentConversation) {
+            updatedConversationMessages  = [...state.messages, newMessage]
+          }
+        } else {
+          return {  
+            users: sortedUsers, 
+            cachedUsers: newUsersCache 
+          }
+        }
+        // Update messages state only if it's the current conversation
         return {
-          users: sortedUsers,  // Add the new message to the messages array
+          messages: isCurrentConversation ? updatedConversationMessages : state.messages,
+          cachedMessages: newMesssagesCache,
+          users: sortedUsers,
+          cachedUsers: newUsersCache
         };
       });
     });

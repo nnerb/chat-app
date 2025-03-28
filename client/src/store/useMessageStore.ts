@@ -270,7 +270,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     const { conversationId } = messageData;
     const userId = useAuthStore.getState().authUser?._id;
     if (!selectedUser?._id || !conversationId || !userId) return;
-
     // Optimistically update the sidebar for the sender
     set((state) => {
       const updatedUsers = state.users.map((user) => {
@@ -291,7 +290,29 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         const timeB = new Date(b.lastMessage?.timestamp || 0).getTime();
         return timeB - timeA; // Descending order (latest first)
       });
-      return { users: sortedUsers, currentPage: state.currentPage, text: "" }  
+      const existingUsersCache = state.cachedUsers.get(userId)
+      const newUsersCached = new Map(state.cachedUsers)
+      const updatedUsersCache = existingUsersCache?.users.map((user) => {
+        if (selectedUser._id === user._id) {
+          return {
+            ...user,
+            timestamp: new Date()
+          }
+        }
+        return user
+      })
+
+      newUsersCached.set(userId, {
+        users: updatedUsersCache || [],
+        timestamp: Date.now()
+      })
+
+      return { 
+        users: sortedUsers, 
+        currentPage: state.currentPage, 
+        text: "",
+        cachedUsers: newUsersCached,
+      }  
     });
 
     set({ isSendingMessage: true })
