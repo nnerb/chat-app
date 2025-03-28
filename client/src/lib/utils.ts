@@ -1,3 +1,4 @@
+import { MessagesProps } from "../store/types/message-types";
 import { AuthUser } from "../store/useAuthStore";
 
 export function formatMessageTime(date: string) {
@@ -70,3 +71,21 @@ export const getFromCache = <T>(
   }
   return undefined;
 };
+
+export const createTemporaryMessage = (
+  messageData: Partial<MessagesProps>,
+  userId: string,
+  selectedUserId: string
+): MessagesProps => {
+  return {
+    _id: "", // Temporary id
+    conversationId: messageData.conversationId!,
+    senderId: userId,
+    receiverId: selectedUserId,
+    text: messageData.text || "",
+    image: messageData.image || "",
+    createdAt: new Date().toISOString(),
+    status: "sending", // You might want to default this to "sending"
+    isTemporary: true
+  }
+}

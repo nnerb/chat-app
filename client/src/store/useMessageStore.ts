@@ -4,9 +4,9 @@ import { axiosInstance } from "../lib/api/client";
 import toast from "react-hot-toast";
 import { AuthUser, useAuthStore } from "./useAuthStore";
 import { AIGeneratedResponseProps, MessageDataProps } from "../types";
-import {  FetchMoreMessagesProps, IUserSidebar, MessagesProps, SendMessageProps } from "./types/message-types";
+import { FetchMoreMessagesProps, IUserSidebar, MessagesProps, SendMessageProps } from "./types/message-types";
 import { ConversationProps, ConversationResponse } from "./types/conversation-types";
-import { getFromCache, updateCache } from "../lib/utils";
+import { createTemporaryMessage, getFromCache, updateCache } from "../lib/utils";
 
 interface CachedMessages {
   messages: MessagesProps[];
@@ -267,7 +267,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   }, 
   sendMessage: async (messageData) => {
     const { selectedUser } = get();
-    const { conversationId } = messageData;
+    const { conversationId, text } = messageData;
     const userId = useAuthStore.getState().authUser?._id;
     if (!selectedUser?._id || !conversationId || !userId) return;
     // Optimistically update the sidebar for the sender
@@ -277,7 +277,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
           return {
             ...user,
             lastMessage: {
-              content: messageData.text || "[Image]",
+              content: text || "[Image]",
               sender: userId,
               timestamp: new Date().toISOString()
             },
@@ -307,11 +307,14 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         timestamp: Date.now()
       })
 
+      const temporaryMessage = createTemporaryMessage(messageData, userId, selectedUser._id)
+
       return { 
         users: sortedUsers, 
         currentPage: state.currentPage, 
         text: "",
         cachedUsers: newUsersCached,
+        messages: [...state.messages, temporaryMessage]
       }  
     });
 
@@ -320,7 +323,8 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
       const { newMessage } : SendMessageProps = res.data
       set((state) => {
-        const updatedMessages = [...state.messages, newMessage]
+        const filteredMessages = state.messages.filter((message) => !message.isTemporary)
+        const updatedMessages = [...filteredMessages, newMessage]
         return { 
             cachedMessages: new Map(state.cachedMessages).set(conversationId, {
             messages: updatedMessages,

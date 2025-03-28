@@ -7,6 +7,7 @@ export interface MessagesProps {
  image: string;
  createdAt: string;
  status: 'sent' | 'delivered' | 'seen' | 'sending' | string
+ isTemporary?: boolean;
 }
 
 export interface IUserSidebar {
@@ -33,5 +34,5 @@ export interface SendMessageProps {
 
 export interface MessageUpdateProps {
   newMessage: MessagesProps;
-  lastMessage: ILastMessage | null
+  lastMessage: ILastMessage;
 }
