@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/nnerb/chat-app#readme",
   "description": "",
-  "devDependencies": {
+  "dependencies": {
     "cross-env": "^7.0.3"
   }
 }
