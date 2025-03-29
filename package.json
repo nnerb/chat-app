@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
-    "start": "cross-env NODE_ENV=production npm run start --prefix server"
+    "start": "npx cross-env NODE_ENV=production npm run start --prefix server"
   },
   "repository": {
     "type": "git",
