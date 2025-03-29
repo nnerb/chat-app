@@ -3,6 +3,10 @@ import { AuthUser } from "../../store/useAuthStore";
 import { FormDataProps, LoginDataProps } from "../../types";
 
 export const authAPI = {
+  checkAuth: async (): Promise<AuthUser> => {
+    const response = await axiosInstance.get('/auth/check')
+    return response.data
+  },
   signup: async (data: FormDataProps): Promise<AuthUser> => {
     const response = await axiosInstance.post('/auth/signup', data)
     return response.data

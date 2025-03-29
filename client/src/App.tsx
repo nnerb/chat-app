@@ -17,10 +17,12 @@ import ChatHeader from "./pages/home/components/chat-header";
 import MessageSkeleton from "./components/skeletons/message-skeleton";
 import MessageInput from "./pages/home/components/message-input";
 import ProtectedRoute from "./protected-route";
+import { useCheckAuth } from "./features/auth/hooks";
 
 const App = () => {
 
-  const { authUser, checkAuth, isCheckingAuth, isLoggingOut } = useAuthStore()
+  const { authUser, isLoggingOut } = useAuthStore()
+  const { mutate: checkAuth, isPending: isCheckingAuth } = useCheckAuth()
   const { validConversationId, isMessagesLoading  } = useMessageStore()
   const { theme } = useThemeStore()
 

@@ -5,6 +5,24 @@ import toast from 'react-hot-toast';
 import { APIError } from '../../lib/api/errorHandler';
 import { useAuthStore } from '../../store/useAuthStore';
 
+export const useCheckAuth = () => {
+  const { connectSocket, setAuthUser } = useAuthStore.getState()
+  return useMutation({
+    mutationFn: authAPI.checkAuth,
+    onSuccess: (user) => {
+      setAuthUser(user)
+      connectSocket();
+    },
+    onError: (error: APIError) => {
+      if (error.status === 401) {
+        console.warn("User is not logged in.");
+      } else {
+        console.error(error.message);
+      }
+    },
+  });
+};
+
 export const useLogin = () => {
   const { connectSocket, setAuthUser } = useAuthStore.getState()
   const queryClient = useQueryClient();

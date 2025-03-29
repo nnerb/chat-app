@@ -6,9 +6,7 @@ import axios from "axios";
 import { io } from "socket.io-client";
 import { useMessageStore } from "./useMessageStore";
 import { MessageUpdateProps } from "./types/message-types";
-import { APIError } from "../lib/api/errorHandler";
 import { NewConversationProps } from "./types/conversation-types";
-
 export interface AuthUser {
   _id: string;
   fullName: string;
@@ -18,7 +16,6 @@ export interface AuthUser {
   createdAt: string;
   lastSeen: string;
 }
-
 interface AuthState {
   authUser: AuthUser | null;
   setAuthUser: (user: AuthUser | null) => void;
@@ -29,7 +26,6 @@ interface AuthState {
   onlineUsers: string[]
   socket: ReturnType<typeof io> | null
   typingUsers: string[]
-  checkAuth: () => Promise<void>;
   updateProfile: (data: UpdateProfileProps ) => Promise<void>;
   removeProfile: () => Promise<void>
   connectSocket: () => void;
@@ -51,23 +47,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   onlineUsers: [],
   socket: null,
   typingUsers: [],
-  checkAuth: async () => {
-    set({ isCheckingAuth: true })
-    try {
-      const res = await axiosInstance.get("/auth/check");
-      set({ authUser: res.data })
-      get().connectSocket()
-    } catch (error: unknown) {
-      if (error as APIError ) {
-        console.warn("User is not logged in.");
-      } else {
-        console.error("Unexpected error during auth check:", error);
-      }
-      set({ authUser: null });
-    } finally {
-      set({ isCheckingAuth: false })
-    }
-  },
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
