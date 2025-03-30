@@ -16,7 +16,8 @@ const ChatContainer = () => {
     resetMessages,
     subscribeToMessages,
     unsubscribeToMessages,
-    validConversationId
+    validConversationId,
+    messages
   } = useMessageStore()
   const { socket } = useAuthStore()
 
@@ -30,7 +31,6 @@ const ChatContainer = () => {
     }
     fetchMessages()
     return () => resetMessages()
-    
   },[conversationId, resetMessages, getMessages, validConversationId])
 
 
@@ -48,7 +48,7 @@ const ChatContainer = () => {
   }, [conversationId, socket, subscribeToMessages, unsubscribeToMessages]);
   
 
-  if (isMessagesLoading) {
+  if (isMessagesLoading && messages.length === 0) {
     return (
       <div className="flex-1 flex flex-col">
         <ChatHeader />

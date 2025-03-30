@@ -177,7 +177,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
     }
   },
   getMessages: async (conversationId) => {
-
+    set({ isMessagesLoading: true })
     const { cachedMessages } = get();
     const cachedData = getFromCache(cachedMessages, conversationId)
 
@@ -190,7 +190,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       });
       return;
     } 
-    set({ isMessagesLoading: true })
     try {
       const res = await axiosInstance.get(`/messages/${conversationId}`);
       const { 
