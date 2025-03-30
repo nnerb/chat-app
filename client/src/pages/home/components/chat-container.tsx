@@ -16,21 +16,22 @@ const ChatContainer = () => {
     resetMessages,
     subscribeToMessages,
     unsubscribeToMessages,
+    validConversationId
   } = useMessageStore()
-  const { socket, authUser } = useAuthStore()
+  const { socket } = useAuthStore()
 
   const { conversationId } = useParams()
 
   useEffect(() => {
-    if (!conversationId) return
     const fetchMessages = async() => {
-      await getMessages(conversationId)
+      if (conversationId && validConversationId) {
+        await getMessages(conversationId); 
+      } 
     }
     fetchMessages()
-    return () => {
-      resetMessages()
-    }
-  },[conversationId, resetMessages, getMessages, socket, authUser])
+    return () => resetMessages()
+    
+  },[conversationId, resetMessages, getMessages, validConversationId])
 
 
   useEffect(() => {

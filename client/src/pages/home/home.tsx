@@ -1,22 +1,7 @@
-
 import Sidebar from "../../components/sidebar";
-import { Outlet, useParams } from "react-router-dom";
-import { useMessageStore } from "../../store/useMessageStore";
-import { useEffect } from "react";
+import { Outlet } from "react-router-dom";
 
 const HomePage = () => {
-  const { conversationId } = useParams(); 
-  const { getMessages, validConversationId } = useMessageStore()
-
-  useEffect(() => {
-    const fetchConversation = async () => {
-      if (conversationId && !validConversationId) {
-        await getMessages(conversationId); 
-      }
-    }
-    fetchConversation()
-  }, [conversationId, validConversationId, getMessages]);
-
   return (
     <div className="h-screen bg-base-200">
       <div className="flex items-center justify-center pt-20 px-4">

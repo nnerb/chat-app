@@ -78,7 +78,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   selectedUser: null,
   isConversationLoading: false,
   isUsersLoading: false,
-  isMessagesLoading: false,
+  isMessagesLoading: true,
   isSendingMessage: false,
   conversation: null,
   validConversationId: null,
@@ -142,8 +142,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       navigate(`/messages/${cachedData.conversation._id}`);
       return
     }
-
-    set({ isConversationLoading: true });
     try {
       // Fetch or create conversation with the selected user
       const res = await axiosInstance.get(`/conversation/${userId}`);
@@ -191,9 +189,8 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         currentPage: cachedData.currentPage,
       });
       return;
-    }
-
-    set({ isMessagesLoading : true });
+    } 
+    set({ isMessagesLoading: true })
     try {
       const res = await axiosInstance.get(`/messages/${conversationId}`);
       const { 

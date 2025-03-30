@@ -73,8 +73,8 @@ const Sidebar = () => {
             onClick={() => handleSelectUser(user)}
             className={`
               w-full p-3 flex items-center gap-3
-              hover:bg-base-300 transition-colors
-              ${selectedUser?._id === user._id && conversationId &&  "bg-base-300 ring-1 ring-base-300"}
+              hover:bg-base-300 transition-colors  
+              ${selectedUser?._id === user._id && conversationId ? "bg-base-300 ring-1 ring-base-300 cursor-auto" : "cursor-pointer"}
             `}
             disabled={selectedUser?._id === user._id && !!conversationId}
           >
