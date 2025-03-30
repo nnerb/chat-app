@@ -6,8 +6,9 @@ import { APIError } from '../../lib/api/errorHandler';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export const useCheckAuth = () => {
-  const { connectSocket, setAuthUser } = useAuthStore.getState()
+  const { connectSocket, setAuthUser, setIsCheckingAuth } = useAuthStore.getState()
   return useMutation({
+    onMutate: () => setIsCheckingAuth(true),
     mutationFn: authAPI.checkAuth,
     onSuccess: (user) => {
       setAuthUser(user)
@@ -20,6 +21,7 @@ export const useCheckAuth = () => {
         console.error(error.message);
       }
     },
+    onSettled: () => setIsCheckingAuth(false)
   });
 };
 

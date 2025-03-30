@@ -21,6 +21,7 @@ interface AuthState {
   setAuthUser: (user: AuthUser | null) => void;
   isUpdatingProfile: boolean;
   isCheckingAuth: boolean;
+  setIsCheckingAuth: (status: boolean) => void;
   isLoggingOut: boolean;
   setIsLoggingOut: (status: boolean) => void;
   onlineUsers: string[]
@@ -41,7 +42,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   authUser: null,
   setAuthUser: (user) => set({ authUser: user }),
   isUpdatingProfile: false,
-  isCheckingAuth: false,
+  isCheckingAuth: true,
+  setIsCheckingAuth: (status ) => set({ isCheckingAuth: status}),
   isLoggingOut: false,
   setIsLoggingOut: (status) => set({ isLoggingOut: status }),
   onlineUsers: [],

@@ -136,7 +136,7 @@ const FormInput = ({
           rows={1}
         />
         {/* Emoji Dropdown */}
-        <div 
+        {/* <div 
           className={`
             dropdown dropdown-left dropdown-top absolute
             top-0 right-0  translate-y-2 hidden sm:block cursor-pointer
@@ -150,7 +150,7 @@ const FormInput = ({
           <div className="dropdown-content disabled:btn-disabled">
             <EmojiPicker onEmojiClick={handleEmojiClick} theme={Theme.AUTO}  />
           </div>
-        </div>
+        </div> */}
         <input
           type="file"
           accept="image/*"

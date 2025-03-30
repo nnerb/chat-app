@@ -31,6 +31,8 @@ interface CachedAIResponses {
   timestamp: number;
 }
 interface UseMessageStoreProps {
+  activeConversationId: string;
+  setActiveConversationId: (id: string) => void;
   text: string;
   setText: (text: string | ((prevText: string) => string)) => void;
   messages: MessagesProps[];
@@ -69,6 +71,8 @@ interface UseMessageStoreProps {
 }
 
 export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
+  activeConversationId: "",
+  setActiveConversationId: (id) => set({ activeConversationId: id }),
   text: "",
   setText: (text) => set((state) => ({ text: typeof text === "function" ? text(state.text) : text })),
   messages: [],
@@ -151,16 +155,17 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         toast.error("Failed to retrieve conversation.")
         return;
       }
-
       set((state) => {
         const newCache = updateCache(state.cachedConversation, userId, {
           conversation,
           timestamp: Date.now()
         })
+        
         return {
           conversation,
           validConversationId: true,
-          cachedConversation: newCache
+          cachedConversation: newCache,
+          activeConversationId: conversation._id
         };
       })
       
@@ -187,6 +192,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         selectedUser: cachedData.selectedUser,
         hasMoreMessages: cachedData.hasMoreMessages,
         currentPage: cachedData.currentPage,
+        isMessagesLoading: false,
       });
       return;
     } 

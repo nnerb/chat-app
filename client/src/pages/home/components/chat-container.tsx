@@ -11,42 +11,34 @@ import { useAuthStore } from "../../../store/useAuthStore";
 
 const ChatContainer = () => {
   const {
-    getMessages,
     isMessagesLoading,
-    resetMessages,
     subscribeToMessages,
     unsubscribeToMessages,
-    validConversationId,
-    messages
+    messages,
+    activeConversationId,
+    setActiveConversationId
   } = useMessageStore()
   const { socket } = useAuthStore()
 
   const { conversationId } = useParams()
 
+
   useEffect(() => {
-    const fetchMessages = async() => {
-      if (conversationId && validConversationId) {
-        await getMessages(conversationId); 
-      } 
+    if (!activeConversationId && conversationId) {
+      setActiveConversationId(conversationId)
     }
-    fetchMessages()
-    return () => resetMessages()
-  },[conversationId, resetMessages, getMessages, validConversationId])
 
-
-  useEffect(() => {
-    if (conversationId && socket) {
-      socket.emit("joinConversation", conversationId);
+    if (conversationId && socket && activeConversationId) {
+      socket.emit("joinConversation", activeConversationId);
       subscribeToMessages();
     }
     return () => {
-      if (socket && conversationId) {
-        socket.emit("leaveConversation", conversationId);
+      if (socket && conversationId && activeConversationId) {
+        socket.emit("leaveConversation", activeConversationId);
         unsubscribeToMessages();
       }
     };
-  }, [conversationId, socket, subscribeToMessages, unsubscribeToMessages]);
-  
+  }, [setActiveConversationId, conversationId, socket, subscribeToMessages, unsubscribeToMessages, activeConversationId]);
 
   if (isMessagesLoading && messages.length === 0) {
     return (
