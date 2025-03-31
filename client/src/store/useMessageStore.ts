@@ -40,7 +40,6 @@ interface UseMessageStoreProps {
   users: IUserSidebar[];
   selectedUser: AuthUser | null;
   isUsersLoading: boolean;
-  isConversationLoading: boolean;
   isMessagesLoading: boolean;
   isSendingMessage: boolean;
   conversation: ConversationProps | null;
@@ -77,10 +76,9 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   setText: (text) => set((state) => ({ text: typeof text === "function" ? text(state.text) : text })),
   messages: [],
   cachedMessages: new Map(),
-  resetMessages: () => set({ messages: [], selectedUser: null }),
+  resetMessages: () => set({ messages: [], selectedUser: null, isMessagesLoading: true }),
   users: [],
   selectedUser: null,
-  isConversationLoading: false,
   isUsersLoading: false,
   isMessagesLoading: true,
   isSendingMessage: false,
@@ -177,12 +175,9 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
       } else {
         toast.error("An unexpected error occurred.");
       }
-    } finally {
-      set({ isConversationLoading: false });
     }
   },
   getMessages: async (conversationId) => {
-    set({ isMessagesLoading: true })
     const { cachedMessages } = get();
     const cachedData = getFromCache(cachedMessages, conversationId)
 
