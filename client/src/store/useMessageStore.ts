@@ -8,7 +8,7 @@ import { FetchMoreMessagesProps, IUserSidebar, MessagesProps, SendMessageProps }
 import { ConversationProps, ConversationResponse } from "./types/conversation-types";
 import { createTemporaryMessage, getFromCache, updateCache } from "../lib/utils";
 
-interface CachedMessages {
+export interface CachedMessages {
   messages: MessagesProps[];
   timestamp: number;
   selectedUser: AuthUser | null;
@@ -16,17 +16,17 @@ interface CachedMessages {
   currentPage: number;
 }
 
-interface CachedUsers {
+export interface CachedUsers {
   users: IUserSidebar[];
   timestamp: number;
 }
 
-interface CachedConversation {
+export interface CachedConversation {
   conversation: ConversationProps;
   timestamp: number;
 }
 
-interface CachedAIResponses {
+export interface CachedAIResponses {
   replyOptions: string[];
   timestamp: number;
 }
@@ -41,6 +41,7 @@ interface UseMessageStoreProps {
   selectedUser: AuthUser | null;
   isUsersLoading: boolean;
   isMessagesLoading: boolean;
+  setIsMessagesLoading: (status: boolean) => void
   isSendingMessage: boolean;
   conversation: ConversationProps | null;
   validConversationId: boolean | null;
@@ -81,6 +82,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: true,
+  setIsMessagesLoading: (status) => set({ isMessagesLoading: status }),
   isSendingMessage: false,
   conversation: null,
   validConversationId: null,
@@ -323,7 +325,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         const filteredMessages = state.messages.filter((message) => !message.isTemporary)
         const updatedMessages = [...filteredMessages, newMessage]
         return { 
-            cachedMessages: new Map(state.cachedMessages).set(conversationId, {
+          cachedMessages: new Map(state.cachedMessages).set(conversationId, {
             messages: updatedMessages,
             selectedUser: state.selectedUser,
             hasMoreMessages: state.hasMoreMessages,

@@ -1,3 +1,7 @@
+import { AuthUser } from "../useAuthStore";
+import { CachedMessages } from "../useMessageStore";
+import { ConversationProps } from "./conversation-types";
+
 export interface MessagesProps {
  _id: string;
  conversationId: string;
@@ -35,4 +39,13 @@ export interface SendMessageProps {
 export interface MessageUpdateProps {
   newMessage: MessagesProps;
   lastMessage: ILastMessage;
+}
+export interface GetMessageResponse {
+  cachedMessages: Map<string, CachedMessages>
+  messages: MessagesProps[];
+  selectedUser: AuthUser | null;
+  conversation: ConversationProps
+  validConversationId: boolean,
+  hasMoreMessages: boolean,
+  currentPage: number
 }

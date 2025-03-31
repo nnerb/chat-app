@@ -10,7 +10,15 @@ import NoChatSelected from "../../components/no-chat-selected";
 import { useEffect } from "react";
 
 const HomePage = () => {
-  const { setActiveConversationId, validConversationId, isMessagesLoading, messages, getMessages, resetMessages, activeConversationId } = useMessageStore()
+  const { 
+    setActiveConversationId, 
+    validConversationId, 
+    isMessagesLoading, 
+    messages, 
+    getMessages, 
+    resetMessages, 
+    activeConversationId 
+  } = useMessageStore()
   const { conversationId } = useParams();
 
   let content;
