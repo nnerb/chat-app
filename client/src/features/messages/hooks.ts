@@ -18,6 +18,7 @@ export const useGetMessagesQuery = (conversationId: string) => {
     },
     enabled: !!conversationId,
     refetchOnWindowFocus: false,
+    staleTime: 300000
   });
 
   useEffect(() => {

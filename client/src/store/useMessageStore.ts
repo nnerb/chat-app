@@ -57,8 +57,6 @@ interface UseMessageStoreProps {
   cachedConversation: Map<string, CachedConversation>;
   cachedUsers: Map<string, CachedUsers>
   isSubscribed: boolean;
-  resetMessages: () => void;
-  getUsers: () => Promise<void>;
   getConversation: (selectedUser: IUserSidebar | null, navigate: (path: string) => void) => Promise<void>;
   fetchMoreMessages: (conversationId: string, currentPage: number) => Promise<void>
   getMessages: (conversationId: string) => Promise<void>;
@@ -77,7 +75,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   setText: (text) => set((state) => ({ text: typeof text === "function" ? text(state.text) : text })),
   messages: [],
   cachedMessages: new Map(),
-  resetMessages: () => set({ messages: [], selectedUser: null, isMessagesLoading: true }),
   users: [],
   selectedUser: null,
   isUsersLoading: false,
@@ -98,43 +95,6 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   cachedConversation: new Map(),
   cachedUsers: new Map(),
   isSubscribed: false,
-  getUsers: async () => {
-    const userId = useAuthStore.getState().authUser?._id
-    if (!userId) return
-
-    const { cachedUsers } = get()
-    const cachedData = getFromCache(cachedUsers, userId);
-
-    if (cachedData) {
-      set({ users: cachedData.users });
-      return;
-    }
-  
-    set({ isUsersLoading: true });
-    try {
-      const res = await axiosInstance.get("/messages/users");
-      const users = res.data
-
-      set((state) => {
-        const newCache = updateCache(state.cachedUsers, userId, {
-          users,
-          timestamp: Date.now(),
-        })
-        return { users: res.data, cachedUsers: newCache }
-      });
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-      // Narrowing the type of error to AxiosError
-        const errorMessage = error.response?.data?.message || 'An error occurred while getting the users';
-        toast.error(errorMessage);
-      } else {
-        // Handle non-Axios errors
-        toast.error('An unexpected error occurred');
-      }
-    } finally {
-      set({ isUsersLoading: false });
-    }
-  },
   getConversation: async (selectedUser, navigate) => {
     if (!selectedUser?._id) return;
     const { cachedConversation } = get()

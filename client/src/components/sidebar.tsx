@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Users } from "lucide-react";
 import SidebarSkeleton from "./skeletons/sidebar-skeleton";
@@ -7,27 +7,19 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useNavigate, useParams } from "react-router-dom";
 import { IUserSidebar } from "../store/types/message-types";
 import { formatRelativeTime } from "../lib/utils";
+import { useGetUsersQuery } from "../features/users/hooks";
+import { useUserStore } from "../store/useUserStore";
 
 const Sidebar = () => {
-  const { 
-    getUsers, 
-    selectedUser, 
-    users, 
-    getConversation, 
-    isUsersLoading, 
-  } = useMessageStore();
+  const { selectedUser, getConversation } = useMessageStore();
+  const { users } = useUserStore()
   const { onlineUsers, authUser } = useAuthStore(); 
 
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const navigate = useNavigate()
   const { conversationId } = useParams()
 
-  useEffect(() => {
-    const fetchUsers = async() => {
-      await getUsers()
-    }
-    fetchUsers()
-  }, [getUsers]);
+  const { isLoading: isUsersLoading } = useGetUsersQuery()
 
   const filteredUsers = (showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
