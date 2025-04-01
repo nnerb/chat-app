@@ -7,20 +7,13 @@ import MessageSkeleton from "../../components/skeletons/message-skeleton";
 import MessageInput from "./components/message-input";
 import NotFound from "../../components/not-found";
 import NoChatSelected from "../../components/no-chat-selected";
-import { useEffect } from "react";
+import { useGetMessagesQuery } from "../../features/messages/hooks";
 
 const HomePage = () => {
-  const { 
-    setActiveConversationId, 
-    validConversationId, 
-    isMessagesLoading, 
-    messages, 
-    getMessages, 
-    resetMessages, 
-    activeConversationId 
-  } = useMessageStore()
+  const { validConversationId, messages } = useMessageStore()
   const { conversationId } = useParams();
-
+  const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "")
+  
   let content;
   if (!conversationId) {
     content = <NoChatSelected />;
@@ -37,17 +30,6 @@ const HomePage = () => {
       <NotFound />
     );
   }
-
-  useEffect(() => {
-    const fetchMessages = async() => {
-      if (conversationId && (validConversationId === null || validConversationId)) {
-        await getMessages(conversationId); 
-      } 
-    }
-    fetchMessages() 
-    return () => resetMessages()
-  },[setActiveConversationId, conversationId, resetMessages, getMessages, validConversationId, activeConversationId])
-  
 
   return (
     <div className="h-screen bg-base-200">

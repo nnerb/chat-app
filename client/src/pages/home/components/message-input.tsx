@@ -2,13 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { useMessageStore } from "../../../store/useMessageStore";
 import FormInput from "./form-input";
+import { useParams } from "react-router-dom";
+import { useGetMessagesQuery } from "../../../features/messages/hooks";
 
 const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState<string | ArrayBuffer | null>(null);
-  const { text, isMessagesLoading } = useMessageStore();
+  const { text } = useMessageStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const maxHeight = 120;
+  const { conversationId } = useParams();
+  const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "")
   
   const removeImage = () => {
     setImagePreview(null);

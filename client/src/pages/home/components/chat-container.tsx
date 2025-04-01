@@ -7,11 +7,11 @@ import MessageInput from "./message-input";
 import { useParams } from "react-router-dom";
 import MessageContent from "./message-content";
 import { useAuthStore } from "../../../store/useAuthStore";
+import { useGetMessagesQuery } from "../../../features/messages/hooks";
 
 
 const ChatContainer = () => {
   const {
-    isMessagesLoading,
     subscribeToMessages,
     unsubscribeToMessages,
     messages,
@@ -21,7 +21,7 @@ const ChatContainer = () => {
   const { socket } = useAuthStore()
 
   const { conversationId } = useParams()
-
+  const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "")
 
   useEffect(() => {
     if (!activeConversationId && conversationId) {

@@ -3,23 +3,22 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { authAPI } from './api';
 import toast from 'react-hot-toast';
 import { APIError } from '../../lib/api/errorHandler';
-import { useAuthStore } from '../../store/useAuthStore';
+import { AuthUser, useAuthStore } from '../../store/useAuthStore';
 
 export const useCheckAuth = () => {
   const { connectSocket, setAuthUser, setIsCheckingAuth } = useAuthStore.getState()
-  return useMutation({
+  return useMutation<AuthUser, APIError>({
     onMutate: () => setIsCheckingAuth(true),
     mutationFn: authAPI.checkAuth,
     onSuccess: (user) => {
       setAuthUser(user)
       connectSocket();
     },
-    onError: (error: APIError) => {
+    onError: (error) => {
       if (error.status === 401) {
-        console.warn("User is not logged in.");
-      } else {
-        console.error(error.message);
-      }
+        return
+      } 
+      console.error(error.message);
     },
     onSettled: () => setIsCheckingAuth(false)
   });

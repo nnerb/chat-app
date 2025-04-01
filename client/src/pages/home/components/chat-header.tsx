@@ -1,10 +1,11 @@
 import { X } from "lucide-react";
 import { useMessageStore } from "../../../store/useMessageStore";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { BASE_URL, useAuthStore } from "../../../store/useAuthStore";
 import { formatRelativeTime } from "../../../lib/utils";
 import { useEffect } from "react";
 import { io } from "socket.io-client";
+import { useGetMessagesQuery } from "../../../features/messages/hooks";
 
 interface UserLoggedOutProps {
   userId: string;
@@ -12,8 +13,10 @@ interface UserLoggedOutProps {
 }
 
 const ChatHeader = () => {
-  const { selectedUser, isMessagesLoading, messages } = useMessageStore();
+  const { selectedUser, messages } = useMessageStore();
   const { onlineUsers } = useAuthStore()
+  const { conversationId } = useParams()
+  const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "")
   
   useEffect(() => {
     const socket = io(BASE_URL);

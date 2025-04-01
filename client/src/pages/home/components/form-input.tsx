@@ -6,6 +6,7 @@ import { useAuthStore } from "../../../store/useAuthStore";
 import { MessageDataProps } from "../../../types";
 import { Image, Send, Smile } from "lucide-react";
 import EmojiPicker, { Theme } from "emoji-picker-react";
+import { useGetMessagesQuery } from "../../../features/messages/hooks";
 
 interface FormInputProps {
   setImagePreview: React.Dispatch<React.SetStateAction<string | ArrayBuffer | null>>;
@@ -24,9 +25,10 @@ const FormInput = ({
   maxHeight
  } : FormInputProps) => {
 
-   const { sendMessage, text, setText, isMessagesLoading, isSendingMessage } = useMessageStore();
+   const { sendMessage, text, setText, isSendingMessage } = useMessageStore();
    const { startTyping, stopTyping } = useAuthStore();
    const { conversationId } = useParams();
+   const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "");
    const stopTypingTimeoutRef = useRef<number | null>();
 
 

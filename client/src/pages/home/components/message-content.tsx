@@ -6,24 +6,26 @@ import { useAuthStore } from "../../../store/useAuthStore";
 import { useParams } from "react-router-dom";
 import TypingIndicator from "./typing-indicator";
 import { formatRelativeTime } from "../../../lib/utils";
+import { useGetMessagesQuery } from "../../../features/messages/hooks";
 
 const MessageContent = () => {
   const { 
     messages, 
     isFetchingMoreMessages, 
     hasMoreMessages,
-    isMessagesLoading,
     fetchMoreMessages,
     currentPage,
     selectedUser,
     isSendingMessage
   } = useMessageStore()
   const { authUser, typingUsers, socket } = useAuthStore();
+  const { conversationId } = useParams()
+  const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "")
+
 
   const messageEndRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const observer = useRef<IntersectionObserver | null>(null)
-  const { conversationId } = useParams()
   const [isBottom, setIsBottom] = useState(false)
   const lastMessageRef = useRef<HTMLDivElement>(null)
     // Get the last message and its ID

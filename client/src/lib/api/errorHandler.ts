@@ -9,7 +9,7 @@ export type APIError = {
 export const handleAPIError = (error: unknown): APIError => {
   if (axios.isAxiosError(error)) {
     return {
-      message: error.response?.data?.message || 'An unexpected error occurred',
+      message: error.response?.data.message || 'An unexpected error occurred',
       status: error.response?.status || null,
       response: error.response,
     };
