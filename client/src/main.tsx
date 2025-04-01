@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import UnderConstruction from './components/under-construction'
+import App from './App'
 
 const queryClient = new QueryClient();
 
@@ -14,8 +14,7 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Toaster />
-        {/* <App />  */}
-        <UnderConstruction />
+        <App /> 
         <ReactQueryDevtools initialIsOpen={false}/>
       </BrowserRouter>
     </QueryClientProvider>
