@@ -37,7 +37,6 @@ const ChatContainer = () => {
         socket.emit("leaveConversation", activeConversationId);
         unsubscribeToMessages();
       }
-      useMessageStore.setState({ messages: [] })
     };
   }, [setActiveConversationId, conversationId, socket, subscribeToMessages, unsubscribeToMessages, activeConversationId]);
 
