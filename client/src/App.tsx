@@ -10,20 +10,27 @@ import { useEffect } from "react";
 import { useThemeStore } from "./store/useThemeStore";
 import Loading from "./components/skeletons/loading";
 import { useCheckAuth } from "./features/auth/hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import ProtectedRoute from "./protected-route";
 
 const App = () => {
 
-  const { authUser, isLoggingOut, isCheckingAuth } = useAuthStore()
+  const { authUser, isLoggingOut, isCheckingAuth, setQueryClient } = useAuthStore()
   const { mutate: checkAuth } = useCheckAuth()
   const { theme } = useThemeStore()
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     checkAuth()
   }, [checkAuth])
 
   useEffect(() => {
+    setQueryClient(queryClient);
+  }, [setQueryClient, queryClient])
+
+  useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-  }, [ theme])
+  }, [theme])
 
   if ((isCheckingAuth && !authUser) || isLoggingOut) return <Loading />
 
@@ -31,8 +38,10 @@ const App = () => {
     <div data-theme={theme} className="w-full min-h-screen">
       <Navbar />
       <Routes>
-        <Route path="messages/:conversationId?" element={ authUser ? <HomePage /> : <Navigate to="/login"/>}/>
-        <Route path="profile" element={ authUser ? <ProfilePage /> : <Navigate to="/login"/>} />
+        <Route element={<ProtectedRoute/>}>
+          <Route path="messages/:conversationId?" element={<HomePage />}/>
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
         {/* Public Routes */}
         <Route path="signup" element={!authUser ? <SignUpPage /> : <Navigate to="/messages" />} />
         <Route path="login" element={!authUser ? <LoginPage /> : <Navigate to="/messages" />} />

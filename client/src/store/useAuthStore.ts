@@ -6,7 +6,10 @@ import axios from "axios";
 import { io } from "socket.io-client";
 import { useMessageStore } from "./useMessageStore";
 import { MessageUpdateProps } from "./types/message-types";
-import { NewConversationProps } from "./types/conversation-types";
+import { ConversationResponse, NewConversationProps } from "./types/conversation-types";
+import { useUserStore } from "./useUserStore";
+import { QueryClient } from "@tanstack/react-query";
+import { GetUsersResponse } from "../features/users/api";
 export interface AuthUser {
   _id: string;
   fullName: string;
@@ -17,6 +20,8 @@ export interface AuthUser {
   lastSeen: string;
 }
 interface AuthState {
+  queryClient: QueryClient | null;
+  setQueryClient: (client: QueryClient) => void;
   authUser: AuthUser | null;
   setAuthUser: (user: AuthUser | null) => void;
   isUpdatingProfile: boolean;
@@ -38,7 +43,10 @@ interface AuthState {
 
 export const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/"
 
+
 export const useAuthStore = create<AuthState>((set, get) => ({
+  queryClient: null,
+  setQueryClient: (client) => set({ queryClient: client }),
   authUser: null,
   setAuthUser: (user) => set({ authUser: user }),
   isUpdatingProfile: false,
@@ -127,10 +135,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       })
     });
 
-    socket.on("messageUpdate", ({ newMessage, lastMessage } : MessageUpdateProps) => {
+
+
+
+    socket.on("messageUpdate", ({ newMessage, lastMessage } : MessageUpdateProps ) => {
+
       const { conversation, messages } = useMessageStore.getState();
-      const { authUser } = useAuthStore.getState();
-      if (!authUser) return
+      const { authUser, queryClient } = useAuthStore.getState();
+      if (!authUser || !queryClient) return
 
       const userId = authUser._id
       const messageExists = messages.some(msg => msg._id === newMessage._id);
@@ -140,64 +152,53 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const conversationId = newMessage.conversationId;
       const isCurrentConversation = newMessage.conversationId === conversation?._id;
 
-      useMessageStore.setState((state) => {       
+      useUserStore.setState((state) => {       
         const updatedUsers = state.users.map((user) => {
           if (user.conversationId === conversationId) {
             return { ...user, lastMessage };
           }
           return user;
-        });
-
-        const sortedUsers = updatedUsers.sort((a, b) => {
+        }).sort((a, b) => {
           const timeA = new Date(a.lastMessage?.timestamp || 0).getTime();
           const timeB = new Date(b.lastMessage?.timestamp || 0).getTime();
           return timeB - timeA; // Descending order (latest first)
         });
 
-        const existingUsersCache = state.cachedUsers.get(userId)
-        const newUsersCache = new Map(state.cachedUsers)
-
-        const updatedUsersCache = existingUsersCache?.users.map((user) => {
-          if (newMessage.receiverId === user._id) {
-            return { ...user, timestamp: new Date() }
-          }
-          return user
-        })
+        const existingUsersCache = queryClient.getQueryData<GetUsersResponse>(['users']);
 
         if (existingUsersCache) {
-          newUsersCache.set(userId, {
-            users: updatedUsersCache || [],
-            timestamp: Date.now()
-          })
-        } 
-
-        const existingMessagesCache = state.cachedMessages.get(conversationId);
-        const newMesssagesCache = new Map(state.cachedMessages);
-        let updatedConversationMessages  = state.messages;
-
-        if (existingMessagesCache) {
-          newMesssagesCache.set(conversationId, {
-            ...existingMessagesCache,
-            messages: [...existingMessagesCache.messages, newMessage],
-            timestamp: Date.now()
+          queryClient.setQueryData<GetUsersResponse>(['users'], (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              usersWithLastMessage: old.usersWithLastMessage.map(user => 
+                user.conversationId === conversationId
+                  ? { ...user, lastMessage }
+                  : user
+              ).sort((a, b) =>
+                new Date(b.lastMessage?.timestamp || 0).getTime() -
+                new Date(a.lastMessage?.timestamp || 0).getTime()
+              )
+            };
           });
-          if (isCurrentConversation) {
-            updatedConversationMessages  = [...state.messages, newMessage]
-          }
-        } else {
-          return {  
-            users: sortedUsers, 
-            cachedUsers: newUsersCache 
-          }
         }
-        // Update messages state only if it's the current conversation
-        return {
-          messages: isCurrentConversation ? updatedConversationMessages : state.messages,
-          cachedMessages: newMesssagesCache,
-          users: sortedUsers,
-          cachedUsers: newUsersCache
-        };
+        return { users: updatedUsers }
       });
+      useMessageStore.setState((state) => {
+        const existingMessagesCache = queryClient.getQueryData<ConversationResponse>(['messages', conversationId])
+        let updatedConversationMessages
+        if (existingMessagesCache) {
+          queryClient.setQueryData<ConversationResponse>(['messages', conversationId], (old) => {
+            if (!old) return old 
+            return {
+              ...old,
+              messages: [...existingMessagesCache.messages, newMessage],
+            }
+          })
+          updatedConversationMessages  = [...state.messages, newMessage]
+        }
+        return { messages: isCurrentConversation ? updatedConversationMessages : state.messages }
+      })
     });
   },
   disconnectSocket: () => {
