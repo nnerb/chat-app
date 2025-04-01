@@ -1,9 +1,13 @@
-import { AxiosResponse } from "axios";
 import { axiosInstance } from "../../lib/api/client";
+import { IUserSidebar } from "../../store/types/message-types";
+
+export interface GetUsersResponse {
+  usersWithLastMessage: IUserSidebar[]
+}
 
 export const usersAPI = {
-  getUsers: async (): Promise<AxiosResponse> => {
+  getUsers: async (): Promise<GetUsersResponse> => {
     const response = await axiosInstance.get("/users")
-    return response
+    return response.data
   },
 };

@@ -9,11 +9,12 @@ export const useGetUsersQuery = () => {
     queryKey: ['users'],
     queryFn: async () => {
       const response = await usersAPI.getUsers()
-      return response.data
+      return response
     },
     refetchOnWindowFocus: false,
     staleTime: 300000
   })
+
 
   if (error && isError) {
     const apiError = error
