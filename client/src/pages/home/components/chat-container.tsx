@@ -14,7 +14,6 @@ const ChatContainer = () => {
   const {
     subscribeToMessages,
     unsubscribeToMessages,
-    messages,
     activeConversationId,
     setActiveConversationId
   } = useMessageStore()
@@ -40,7 +39,7 @@ const ChatContainer = () => {
     };
   }, [setActiveConversationId, conversationId, socket, subscribeToMessages, unsubscribeToMessages, activeConversationId]);
 
-  if (isMessagesLoading && messages.length === 0) {
+  if (isMessagesLoading) {
     return (
       <div className="flex-1 flex flex-col">
         <ChatHeader />

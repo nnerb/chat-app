@@ -10,7 +10,7 @@ import NoChatSelected from "../../components/no-chat-selected";
 import { useGetMessagesQuery } from "../../features/messages/hooks";
 
 const HomePage = () => {
-  const { validConversationId, messages } = useMessageStore()
+  const { validConversationId } = useMessageStore()
   const { conversationId } = useParams();
   const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "")
   
@@ -20,7 +20,7 @@ const HomePage = () => {
   } else {
     content = validConversationId ? (
       <ChatContainer />
-    ) : isMessagesLoading && messages.length === 0 ? (
+    ) : isMessagesLoading ? (
       <div className="flex-1 flex flex-col">
         <ChatHeader />
         <MessageSkeleton />
