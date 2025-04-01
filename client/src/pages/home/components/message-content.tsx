@@ -22,11 +22,10 @@ const MessageContent = () => {
   const { conversationId } = useParams()
   const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "")
 
-
   const messageEndRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const observer = useRef<IntersectionObserver | null>(null)
-  const [isBottom, setIsBottom] = useState(false)
+  const [isBottom, setIsBottom] = useState(true)
   const lastMessageRef = useRef<HTMLDivElement>(null)
     // Get the last message and its ID
   const lastMessage = messages[messages.length - 1];
