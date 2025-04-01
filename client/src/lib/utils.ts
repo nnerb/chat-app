@@ -85,7 +85,7 @@ export const createTemporaryMessage = (
     text: messageData.text || "",
     image: messageData.image || "",
     createdAt: new Date().toISOString(),
-    status: "sending", // You might want to default this to "sending"
+    status: "sending",
     isTemporary: true
   }
 }

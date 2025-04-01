@@ -3,10 +3,9 @@ import toast from "react-hot-toast";
 import { useMessageStore } from "../../../store/useMessageStore";
 import { useParams } from "react-router-dom";
 import { useAuthStore } from "../../../store/useAuthStore";
-import { MessageDataProps } from "../../../types";
 import { Image, Send, Smile } from "lucide-react";
 import EmojiPicker, { Theme } from "emoji-picker-react";
-import { useGetMessagesQuery } from "../../../features/messages/hooks";
+import { useGetMessagesQuery, useSendMessageQuery } from "../../../features/messages/hooks";
 
 interface FormInputProps {
   setImagePreview: React.Dispatch<React.SetStateAction<string | ArrayBuffer | null>>;
@@ -25,10 +24,11 @@ const FormInput = ({
   maxHeight
  } : FormInputProps) => {
 
-   const { sendMessage, text, setText, isSendingMessage } = useMessageStore();
+   const { text, setText, isSendingMessage, selectedUser } = useMessageStore();
    const { startTyping, stopTyping } = useAuthStore();
    const { conversationId } = useParams();
    const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "");
+   const { mutateAsync: sendMessage } = useSendMessageQuery()
    const stopTypingTimeoutRef = useRef<number | null>();
 
 
@@ -48,17 +48,19 @@ const FormInput = ({
 
    const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (!text.trim() && !imagePreview) return;
+      if (!text.trim() && !imagePreview && !selectedUser) return;
   
       try {
         
         if (conversationId) stopTyping(conversationId);
-        await sendMessage({
-          text: text.trim(),
-          image: imagePreview,
-          conversationId: conversationId
-        } as MessageDataProps);
-  
+         await sendMessage({
+            messageData: {
+              text: text.trim(),
+              image: typeof imagePreview === "string" ? imagePreview : "",
+              conversationId: conversationId || ""
+            },
+            selectedUser
+          });
         setText("");
         setImagePreview(null);
         if (fileInputRef.current) fileInputRef.current.value = "";

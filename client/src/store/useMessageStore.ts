@@ -43,6 +43,7 @@ interface UseMessageStoreProps {
   isMessagesLoading: boolean;
   setIsMessagesLoading: (status: boolean) => void
   isSendingMessage: boolean;
+  setIsSendingMessage: (status: boolean) => void;
   conversation: ConversationProps | null;
   validConversationId: boolean | null;
   conversationIds: string[] | null;
@@ -81,6 +82,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
   isMessagesLoading: true,
   setIsMessagesLoading: (status) => set({ isMessagesLoading: status }),
   isSendingMessage: false,
+  setIsSendingMessage: (status) => set({ isSendingMessage: status }),
   conversation: null,
   validConversationId: null,
   conversationIds: null,
