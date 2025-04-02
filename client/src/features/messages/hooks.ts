@@ -44,7 +44,7 @@ export const useGetMessagesQuery = (conversationId: string) => {
         };
       });
     }
-  }, [isSuccess, data, conversationId]);
+  }, [isSuccess, data]);
 
   return { data, error, isLoading, isError, isSuccess };
 };
