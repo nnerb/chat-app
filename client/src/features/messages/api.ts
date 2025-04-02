@@ -3,7 +3,7 @@ import { axiosInstance } from "../../lib/api/client";
 import { MessageDataProps } from "../../types";
 import { AuthUser } from "../../store/useAuthStore";
 import { SendMessageProps } from "../../store/types/message-types";
-import { ConversationResponse } from "../../store/types/conversation-types";
+import { MessageResponse } from "../../store/types/conversation-types";
 
 interface SendMessageVariables {
   messageData: MessageDataProps,
@@ -11,7 +11,7 @@ interface SendMessageVariables {
 }
 
 export const messageAPI = {
-  getMessages: async (conversationId: string): Promise<ConversationResponse> => {
+  getMessages: async (conversationId: string): Promise<MessageResponse> => {
     const response = await axiosInstance.get(`/messages/${conversationId}`)
     return response.data
   },

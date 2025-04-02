@@ -4,14 +4,14 @@ import { APIError } from '../../lib/api/errorHandler';
 import { useMessageStore } from '../../store/useMessageStore';
 import { useEffect } from 'react';
 import { messageAPI } from './api';
-import { ConversationResponse } from '../../store/types/conversation-types';
+import { MessageResponse } from '../../store/types/conversation-types';
 import { createTemporaryMessage } from '../../lib/utils';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useUserStore } from '../../store/useUserStore';
 
 
 export const useGetMessagesQuery = (conversationId: string) => {
-  const { data, error, isLoading, isError, isSuccess } = useQuery<ConversationResponse, APIError>({
+  const { data, error, isLoading, isError, isSuccess } = useQuery<MessageResponse, APIError>({
     queryKey: ['messages', conversationId],
     queryFn: async () => {
       const response = await messageAPI.getMessages(conversationId);
