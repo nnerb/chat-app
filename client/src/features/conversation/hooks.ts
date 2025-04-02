@@ -12,7 +12,8 @@ export const useGetConversationQuery = () => {
       useMessageStore.setState(() => ({
         conversation,
         validConversationId: true,
-        activeConversationId: conversation._id
+        activeConversationId: conversation._id,
+        messages: []
       }))
       navigate(`/messages/${conversation._id}`)
     },
