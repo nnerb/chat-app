@@ -28,7 +28,7 @@ const FormInput = ({
    const { startTyping, stopTyping } = useAuthStore();
    const { conversationId } = useParams();
    const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "");
-   const { mutateAsync: sendMessage } = useSendMessageQuery()
+   const { mutate: sendMessage } = useSendMessageQuery()
    const stopTypingTimeoutRef = useRef<number | null>();
 
 
@@ -53,7 +53,7 @@ const FormInput = ({
       try {
         
         if (conversationId) stopTyping(conversationId);
-         await sendMessage({
+          sendMessage({
             messageData: {
               text: text.trim(),
               image: typeof imagePreview === "string" ? imagePreview : "",
