@@ -9,6 +9,15 @@ export interface ConversationProps {
 }
 
 export interface ConversationResponse {
+  _id: string;
+  conversation: ConversationProps,
+  aiGenerateRepliesCount: number | null,
+  participants: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MessageResponse {
   conversation: ConversationProps,
   selectedUser: AuthUser | null
   messages: MessagesProps[],
