@@ -39,7 +39,6 @@ export const useConversationQuery = () => {
       navigate(`/messages/${data._id}`);
     },
     onError: (error) => {
-      console.log(error)
       toast.error(error.message)
     },
   });
