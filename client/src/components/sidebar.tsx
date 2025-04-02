@@ -9,9 +9,10 @@ import { IUserSidebar } from "../store/types/message-types";
 import { formatRelativeTime } from "../lib/utils";
 import { useGetUsersQuery } from "../features/users/hooks";
 import { useUserStore } from "../store/useUserStore";
+import { useGetConversationQuery } from "../features/conversation/hooks";
 
 const Sidebar = () => {
-  const { selectedUser, getConversation } = useMessageStore();
+  const { selectedUser } = useMessageStore();
   const { users } = useUserStore()
   const { onlineUsers, authUser } = useAuthStore(); 
 
@@ -20,6 +21,7 @@ const Sidebar = () => {
   const { conversationId } = useParams()
 
   const { isLoading: isUsersLoading } = useGetUsersQuery()
+  const { mutate: getConversation } = useGetConversationQuery()
 
   const filteredUsers = (showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
@@ -30,8 +32,8 @@ const Sidebar = () => {
     return timeB - timeA;
   })
 
-  const handleSelectUser = async(user: IUserSidebar) => {
-    await getConversation(user, navigate)
+  const handleSelectUser = (user: IUserSidebar) => {
+    getConversation({ userId: user._id, navigate })
   }
   
   if (isUsersLoading) return <SidebarSkeleton />;
