@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { AuthUser, useAuthStore } from "./useAuthStore";
 import { AIGeneratedResponseProps, MessageDataProps } from "../types";
 import { FetchMoreMessagesProps, IUserSidebar, MessagesProps, SendMessageProps } from "./types/message-types";
-import { ConversationProps, ConversationResponse } from "./types/conversation-types";
+import { ConversationProps, ConversationResponse, MessageResponse } from "./types/conversation-types";
 import { createTemporaryMessage, getFromCache, updateCache } from "../lib/utils";
 
 export interface CachedMessages {
@@ -163,7 +163,7 @@ export const useMessageStore = create<UseMessageStoreProps>((set, get) => ({
         messages, 
         selectedUser, 
         conversation 
-      } : ConversationResponse = res.data;
+      } : MessageResponse = res.data;
       set((state) => {
         const newCache = updateCache(state.cachedMessages, conversationId, {
           messages,
