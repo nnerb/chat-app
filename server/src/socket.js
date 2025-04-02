@@ -44,7 +44,7 @@ io.on("connection", async (socket) => {
     }
     for (const conversation of conversations) {
       // 3. Identify the sender
-      const senderId = conversation.participants.find(id => id.toString() !== userId);
+      const senderId = conversation.participants.find(id => id !== userId);
       // 4. If the sender is only, notify them hehe
       if (senderId) {
         const senderSocketId = getReceiverSocketId(senderId)
