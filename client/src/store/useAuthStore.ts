@@ -6,7 +6,7 @@ import axios from "axios";
 import { io } from "socket.io-client";
 import { useMessageStore } from "./useMessageStore";
 import { MessageUpdateProps } from "./types/message-types";
-import { ConversationResponse, NewConversationProps } from "./types/conversation-types";
+import { ConversationResponse, MessageResponse, NewConversationProps } from "./types/conversation-types";
 import { useUserStore } from "./useUserStore";
 import { QueryClient } from "@tanstack/react-query";
 import { GetUsersResponse } from "../features/users/api";
@@ -185,7 +185,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return { users: updatedUsers }
       });
       useMessageStore.setState((state) => {
-        const existingMessagesCache = queryClient.getQueryData<ConversationResponse>(['messages', conversationId])
+        const existingMessagesCache = queryClient.getQueryData<MessageResponse>(['messages', conversationId])
         let updatedConversationMessages
         if (existingMessagesCache) {
           queryClient.setQueryData<ConversationResponse>(['messages', conversationId], (old) => {
