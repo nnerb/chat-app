@@ -4,24 +4,20 @@ import { Users } from "lucide-react";
 import SidebarSkeleton from "./skeletons/sidebar-skeleton";
 import { useMessageStore } from "../store/useMessageStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { useNavigate, useParams } from "react-router-dom";
-import { IUserSidebar } from "../store/types/message-types";
+import { useParams } from "react-router-dom";;
 import { formatRelativeTime } from "../lib/utils";
 import { useGetUsersQuery } from "../features/users/hooks";
 import { useUserStore } from "../store/useUserStore";
-import { useGetConversationQuery } from "../features/conversation/hooks";
+import { useConversationQuery } from "../features/conversation/hooks";
 
 const Sidebar = () => {
   const { selectedUser } = useMessageStore();
   const { users } = useUserStore()
   const { onlineUsers, authUser } = useAuthStore(); 
-
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
-  const navigate = useNavigate()
   const { conversationId } = useParams()
-
   const { isLoading: isUsersLoading } = useGetUsersQuery()
-  const { mutate: getConversation } = useGetConversationQuery()
+  const { mutate: startConversation } = useConversationQuery()
 
   const filteredUsers = (showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
@@ -32,10 +28,6 @@ const Sidebar = () => {
     return timeB - timeA;
   })
 
-  const handleSelectUser = (user: IUserSidebar) => {
-    getConversation({ userId: user._id, navigate })
-  }
-  
   if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
@@ -64,7 +56,7 @@ const Sidebar = () => {
         {filteredUsers.map((user) => (
           <button
             key={user._id}
-            onClick={() => handleSelectUser(user)}
+            onClick={() => startConversation(user._id)}
             className={`
               w-full p-3 flex items-center gap-3
               hover:bg-base-300 transition-colors  
