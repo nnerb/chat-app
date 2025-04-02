@@ -13,7 +13,7 @@ interface UserLoggedOutProps {
 }
 
 const ChatHeader = () => {
-  const { selectedUser } = useMessageStore();
+  const { selectedUser, messages } = useMessageStore();
   const { onlineUsers } = useAuthStore()
   const { conversationId } = useParams()
   const { isLoading: isMessagesLoading } = useGetMessagesQuery(conversationId || "")
@@ -40,7 +40,7 @@ const ChatHeader = () => {
         <div className="flex items-center gap-3 shrink-0">
           {/* Avatar */}
           <div className="chat-image avatar">
-            {isMessagesLoading ? (
+            {isMessagesLoading && messages.length === 0 ? (
               <div className="size-8 md:size-10 rounded-full">
                 <div className="skeleton w-full h-full rounded-full" />
               </div> 
@@ -61,7 +61,7 @@ const ChatHeader = () => {
 
           {/* User info */}
           <div>
-            {isMessagesLoading ? (
+            {isMessagesLoading && messages.length === 0 ? (
             <div className="chat-header flex flex-col gap-1">
               <div className="skeleton h-4 w-24" />
               <div className="skeleton h-4 w-14" />
