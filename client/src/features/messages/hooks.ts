@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { APIError } from '../../lib/api/errorHandler';
 import { useMessageStore } from '../../store/useMessageStore';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { messageAPI } from './api';
 import { MessageResponse } from '../../store/types/conversation-types';
 import { createTemporaryMessage } from '../../lib/utils';
@@ -11,6 +11,22 @@ import { useUserStore } from '../../store/useUserStore';
 
 
 export const useGetMessagesQuery = (conversationId: string) => {
+  const prevConvoId = useRef(conversationId);
+  const { setState } = useMessageStore;
+  // Reset store when conversation changes
+  useEffect(() => {
+    if (prevConvoId.current !== conversationId) {
+      setState({
+        messages: [],
+        selectedUser: null,
+        validConversationId: false,
+        hasMoreMessages: false,
+        currentPage: 1
+      });
+      prevConvoId.current = conversationId;
+    }
+  }, [conversationId, setState]);
+
   const { data, error, isLoading, isError, isSuccess } = useQuery<MessageResponse, APIError>({
     queryKey: ['messages', conversationId],
     queryFn: async () => {
@@ -21,6 +37,7 @@ export const useGetMessagesQuery = (conversationId: string) => {
     refetchOnWindowFocus: false,
     staleTime: 300000
   });
+  
 
   useEffect(() => {
     if (isError && error) {
