@@ -1,6 +1,6 @@
 # 🗨️ Yapster – Real-Time Chat App with AI-Powered Replies
 
-Yapster is a **real-time chat application** built with **MERN, TypeScript, and Socket.IO**, featuring:
+Yapster is a **real-time chat application** built with **MERN, TypeScript, React Query and Socket.IO**, featuring:
 ✅ AI-generated reply suggestions 🤖  
 ✅ Infinite scrolling & real-time messaging 💬  
 ✅ Customizable themes (32 options!) 🎨  
@@ -37,6 +37,7 @@ Yapster is a **real-time chat application** built with **MERN, TypeScript, and S
 - Zustand (state management)
 - React Router
 - Axios
+- React Query
 - React Hot Toast
 
 ### Backend
